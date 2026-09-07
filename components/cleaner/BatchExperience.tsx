@@ -20,12 +20,7 @@ async function recordSuccessfulCleaning(item: BatchItem, mode: CleaningMode) {
   const response = await fetch('/api/cleaning/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      referenceId: item.id,
-      mode,
-      format: item.file.type,
-      fileSize: item.file.size,
-    }),
+    body: JSON.stringify({ referenceId: item.id, mode, format: item.file.type, fileSize: item.file.size }),
   });
   let data: { error?: string } = {};
   try { data = await response.json(); } catch {}
@@ -56,10 +51,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
     abortRef.current?.abort();
   }, []);
 
-  const update = (id: string, patch: Partial<BatchItem>) => {
-    setItems(prev => prev.map(item => item.id === id ? { ...item, ...patch } : item));
-  };
-
+  const update = (id: string, patch: Partial<BatchItem>) => setItems(prev => prev.map(item => item.id === id ? { ...item, ...patch } : item));
   const scanned = items.filter(i => i.result).length;
   const completed = items.filter(i => i.stage === 'verified').length;
   const failed = items.filter(i => i.stage === 'error').length;
@@ -80,17 +72,10 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
       for (const item of targets) {
         if (abortRef.current.signal.aborted) break;
         update(item.id, { stage: 'scanning', error: undefined });
-        try {
-          const result = await scanImage(item.file);
-          update(item.id, { stage: 'scanned', result });
-        } catch (e) {
-          update(item.id, { stage: 'error', error: e instanceof Error ? e.message : 'Unable to scan this image.' });
-        }
+        try { update(item.id, { stage: 'scanned', result: await scanImage(item.file) }); }
+        catch (e) { update(item.id, { stage: 'error', error: e instanceof Error ? e.message : 'Unable to scan this image.' }); }
       }
-    } finally {
-      setBusy(false);
-      abortRef.current = null;
-    }
+    } finally { setBusy(false); abortRef.current = null; }
   };
 
   useEffect(() => {
@@ -106,8 +91,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
     setBusy(true);
     abortRef.current = new AbortController();
     try {
-      const targets = items.filter(i => i.stage === 'scanned');
-      for (const item of targets) {
+      for (const item of items.filter(i => i.stage === 'scanned')) {
         if (abortRef.current.signal.aborted) break;
         if (!item.result) continue;
         update(item.id, { stage: 'cleaning', error: undefined });
@@ -115,11 +99,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
           const blob = await cleanImage(item.file, mode);
           const check = await verifyCleanedImage(blob);
           if (!check.verified) throw new Error(`${check.remainingMetadata} supported metadata item(s) remain after cleaning.`);
-
-          // Entitlement is confirmed only after local cleaning + verification succeeds.
-          // The original image is never sent to this endpoint.
           await recordSuccessfulCleaning(item, mode);
-
           const url = URL.createObjectURL(blob);
           urlsRef.current.push(url);
           update(item.id, { stage: 'verified', cleanedBlob: blob, downloadUrl: url });
@@ -127,23 +107,15 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
           update(item.id, { stage: 'error', error: e instanceof Error ? e.message : 'Cleaning failed.' });
         }
       }
-    } finally {
-      setBusy(false);
-      abortRef.current = null;
-    }
+    } finally { setBusy(false); abortRef.current = null; }
   };
 
-  const cancel = () => {
-    abortRef.current?.abort();
-    setBusy(false);
-  };
-
-  const downloadOne = (item: BatchItem) => {
-    if (item.downloadUrl) triggerDownload(item.downloadUrl, outputName(item.file.name));
-  };
+  const cancel = () => { abortRef.current?.abort(); setBusy(false); };
+  const downloadOne = (item: BatchItem) => { if (item.downloadUrl) triggerDownload(item.downloadUrl, outputName(item.file.name)); };
 
   const downloadAll = async () => {
     if (!cleaned.length || zipBusy) return;
+    if (cleaned.length === 1) { downloadOne(cleaned[0]); return; }
     setZipBusy(true);
     try {
       const zip = await createLocalZip(cleaned.map(i => ({ name: outputName(i.file.name), blob: i.cleanedBlob! })));
@@ -151,10 +123,8 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
       triggerDownload(url, `nometa-cleaned-${new Date().toISOString().slice(0, 10)}.zip`);
       window.setTimeout(() => URL.revokeObjectURL(url), 1500);
     } catch {
-      // Keep the workflow usable even if ZIP creation fails; individual downloads remain available.
-    } finally {
-      setZipBusy(false);
-    }
+      // Individual downloads remain available if the local ZIP cannot be created.
+    } finally { setZipBusy(false); }
   };
 
   const statusText = useMemo(() => {
@@ -170,82 +140,46 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
   return (
     <section className="nm-batch" aria-live="polite">
       <div className="nm-batch__header">
-        <div>
-          <span className="nm-eyebrow">Private photo workspace</span>
-          <h2>{statusText}</h2>
-          <p>{items.length} photo{items.length === 1 ? '' : 's'} · Everything runs locally in this browser.</p>
-        </div>
+        <div><span className="nm-eyebrow">Private photo workspace</span><h2>{statusText}</h2><p>{items.length} photo{items.length === 1 ? '' : 's'} · Everything runs locally in this browser.</p></div>
         <div className="nm-batch__actions">
           {busy ? <Button variant="secondary" onClick={cancel}>Stop</Button> : null}
           {!busy && readyToClean > 0 ? <Button variant="primary" onClick={runClean}>Clean {readyToClean > 1 ? `${readyToClean} photos` : 'photo'}</Button> : null}
           {!busy && failed > 0 ? <Button variant="secondary" onClick={() => runScan(true)}>Retry failed</Button> : null}
-          {!busy && completed > 0 ? <Button variant="secondary" onClick={downloadAll} disabled={zipBusy}>{zipBusy ? 'Preparing ZIP…' : `Download ${completed > 1 ? 'all' : 'photo'}`}</Button> : null}
+          {!busy && completed > 0 ? <Button variant="secondary" onClick={downloadAll} disabled={zipBusy}>{zipBusy ? 'Preparing ZIP…' : completed > 1 ? 'Download all' : 'Download photo'}</Button> : null}
         </div>
       </div>
 
       <div className="nm-batch__progress" aria-label={`${progress}% complete`}>
         <div className="nm-batch__progress-top"><span>{completed === items.length ? 'Complete' : busy ? 'Working securely on your device' : 'Workflow progress'}</span><strong>{progress}%</strong></div>
-        <div className="nm-batch__progress-track"><span style={{ width: `${Math.max(progress, scanning > 0 || cleaning > 0 ? Math.max(8, progress) : progress)}%` }} /></div>
+        <div className="nm-batch__progress-track"><span style={{ width: `${Math.max(progress, scanning > 0 || cleaning > 0 ? 8 : 0)}%` }} /></div>
       </div>
 
-      <div className="nm-batch__summary">
-        <span><strong>{items.length}</strong> selected</span>
-        <span><strong>{scanned}</strong> scanned</span>
-        <span><strong>{completed}</strong> ready</span>
-        <span><strong>{metadataCount}</strong> metadata found</span>
-      </div>
+      <div className="nm-batch__summary"><span><strong>{items.length}</strong> selected</span><span><strong>{scanned}</strong> scanned</span><span><strong>{completed}</strong> ready</span><span><strong>{metadataCount}</strong> metadata found</span></div>
 
       <div className="nm-batch__mode">
         <span>Choose protection</span>
         <div role="radiogroup" aria-label="Cleaning mode">
-          <button type="button" onClick={() => setMode('standard')} className={mode === 'standard' ? 'is-selected' : ''} disabled={busy} aria-checked={mode === 'standard'} role="radio">
-            <strong>Standard Clean</strong><small>Remove privacy-sensitive metadata while keeping the image itself untouched.</small>
-          </button>
-          <button type="button" onClick={() => setMode('maximum')} className={mode === 'maximum' ? 'is-selected' : ''} disabled={busy} aria-checked={mode === 'maximum'} role="radio">
-            <strong>Maximum Privacy</strong><small>Use the most aggressive supported metadata removal in this version.</small>
-          </button>
+          <button type="button" onClick={() => setMode('standard')} className={mode === 'standard' ? 'is-selected' : ''} disabled={busy} aria-checked={mode === 'standard'} role="radio"><strong>Standard Clean</strong><small>Remove privacy-sensitive metadata without changing the image pixels.</small></button>
+          <button type="button" onClick={() => setMode('maximum')} className={mode === 'maximum' ? 'is-selected' : ''} disabled={busy} aria-checked={mode === 'maximum'} role="radio"><strong>Maximum Privacy</strong><small>Use the most aggressive supported metadata removal in this version.</small></button>
         </div>
       </div>
 
       <div className="nm-batch__list">
-        {items.map((item, index) => (
-          <article className="nm-batch-item" key={item.id}>
-            <img src={item.previewUrl} alt="" />
-            <div className="nm-batch-item__body">
-              <strong title={item.file.name}>{item.file.name}</strong>
-              <span>{formatBytes(item.file.size)} · {item.result ? `${item.result.entries.length} metadata item${item.result.entries.length === 1 ? '' : 's'} found` : 'Waiting to scan'}</span>
-              {item.error ? <small className="nm-batch-item__error">{item.error}</small> : null}
-            </div>
-            <div className={`nm-batch-status nm-batch-status--${item.stage}`}><i aria-hidden="true" />{label(item.stage, index + 1, items.length)}</div>
-            {item.downloadUrl ? <button type="button" className="nm-button nm-button--secondary nm-batch-download" onClick={() => downloadOne(item)}>Download</button> : null}
-          </article>
-        ))}
+        {items.map((item, index) => <article className="nm-batch-item" key={item.id}>
+          <img src={item.previewUrl} alt="" />
+          <div className="nm-batch-item__body"><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)} · {item.result ? `${item.result.entries.length} metadata item${item.result.entries.length === 1 ? '' : 's'} found` : 'Waiting to scan'}</span>{item.error ? <small className="nm-batch-item__error">{item.error}</small> : null}</div>
+          <div className={`nm-batch-status nm-batch-status--${item.stage}`}><i aria-hidden="true" />{label(item.stage, index + 1, items.length)}</div>
+          {item.downloadUrl ? <button type="button" className="nm-button nm-button--secondary nm-batch-download" onClick={() => downloadOne(item)}>Download</button> : null}
+        </article>)}
       </div>
 
-      {completed > 0 ? (
-        <div className="nm-batch__success">
-          <div className="nm-batch__success-icon" aria-hidden="true">✓</div>
-          <div><strong>Your clean copy{completed > 1 ? 'ies are' : ' is'} ready.</strong><span>Download individual photos above or use the button to get everything as one ZIP. ZIP creation stays on your device.</span></div>
-        </div>
-      ) : null}
-
+      {completed > 0 ? <div className="nm-batch__success"><div className="nm-batch__success-icon" aria-hidden="true">✓</div><div><strong>Your clean copy{completed > 1 ? 'ies are' : ' is'} ready.</strong><span>Download individual photos above or get everything as one ZIP. ZIP creation stays on your device.</span></div></div> : null}
       <p className="nm-batch__privacy">🔒 Your original photos are processed in your browser and are not uploaded or stored by NoMeta. Only account, usage and billing information is sent to the server.</p>
     </section>
   );
 }
 
 function label(stage: BatchStage, n: number, total: number) {
-  if (stage === 'queued') return 'Queued';
-  if (stage === 'scanning') return `Scanning ${n}/${total}`;
-  if (stage === 'scanned') return 'Scanned';
-  if (stage === 'cleaning') return 'Cleaning';
-  if (stage === 'verified') return '✓ Ready';
-  return 'Needs attention';
+  if (stage === 'queued') return 'Queued'; if (stage === 'scanning') return `Scanning ${n}/${total}`; if (stage === 'scanned') return 'Scanned'; if (stage === 'cleaning') return 'Cleaning'; if (stage === 'verified') return '✓ Ready'; return 'Needs attention';
 }
-
-function formatBytes(bytes: number) {
-  if (!bytes) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`;
-}
+function formatBytes(bytes: number) { if (!bytes) return '0 B'; const units = ['B', 'KB', 'MB', 'GB']; const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1); return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`; }
