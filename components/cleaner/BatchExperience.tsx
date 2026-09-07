@@ -16,6 +16,23 @@ function outputName(name: string) {
   return `${dot > 0 ? name.slice(0, dot) : name}-cleaned${dot > 0 ? name.slice(dot) : ''}`;
 }
 
+async function recordSuccessfulCleaning(item: BatchItem, mode: CleaningMode) {
+  const response = await fetch('/api/cleaning/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      referenceId: item.id,
+      mode,
+      format: item.file.type,
+      bytes: item.file.size,
+    }),
+  });
+
+  let data: { error?: string } = {};
+  try { data = await response.json(); } catch {}
+  if (!response.ok) throw new Error(data.error || 'Unable to record this cleaning. Your image was not uploaded.');
+}
+
 export function BatchExperience({ files }: { files: UploadItem[] }) {
   const [items, setItems] = useState<BatchItem[]>(() => files.map(f => ({ ...f, stage: 'queued' })));
   const [mode, setMode] = useState<CleaningMode>('standard');
@@ -30,7 +47,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
   const completed = items.filter(i => i.stage === 'verified').length;
   const failed = items.filter(i => i.stage === 'error').length;
   const metadataCount = items.reduce((n, i) => n + (i.result?.entries.length ?? 0), 0);
-  const removedCount = items.reduce((n, i) => n + Math.max(0, (i.result?.entries.length ?? 0)), 0);
+  const removedCount = metadataCount;
   const cleaned = items.filter(i => i.cleanedBlob);
   const allScanned = items.length > 0 && items.every(i => ['scanned','cleaning','verified'].includes(i.stage));
 
@@ -61,6 +78,11 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
           const blob = await cleanImage(item.file, mode);
           const check = await verifyCleanedImage(blob);
           if (!check.verified) throw new Error(`${check.remainingMetadata} supported metadata item(s) remain after cleaning.`);
+
+          // The image itself stays in the browser. Only entitlement/audit metadata
+          // is sent to the server after local cleaning and verification succeed.
+          await recordSuccessfulCleaning(item, mode);
+
           const url = URL.createObjectURL(blob);
           urlsRef.current.push(url);
           update(item.id, { stage: 'verified', cleanedBlob: blob, downloadUrl: url });
@@ -99,11 +121,9 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
         {!busy && completed > 0 ? <Button variant="secondary" onClick={downloadAll} disabled={zipBusy}>{zipBusy ? 'Building ZIP…' : `Download ${completed} as ZIP`}</Button> : null}
       </div>
     </div>
-
     <div className="nm-batch__summary">
       <span><strong>{items.length}</strong> selected</span><span><strong>{items.filter(i => i.result).length}</strong> scanned</span><span><strong>{completed}</strong> verified</span><span><strong>{metadataCount}</strong> metadata found</span><span><strong>{removedCount}</strong> removable items</span>
     </div>
-
     <div className="nm-batch__mode">
       <span>Cleaning mode</span>
       <div role="radiogroup" aria-label="Cleaning mode">
@@ -111,7 +131,6 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
         <button onClick={() => setMode('maximum')} className={mode === 'maximum' ? 'is-selected' : ''} disabled={busy}><strong>Maximum Privacy</strong><small>More aggressive removal</small></button>
       </div>
     </div>
-
     <div className="nm-batch__list">
       {items.map((item, index) => <article className="nm-batch-item" key={item.id}>
         <img src={item.previewUrl} alt="" />
@@ -120,7 +139,6 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
         {item.downloadUrl ? <a className="nm-button nm-button--secondary nm-batch-download" href={item.downloadUrl} download={outputName(item.file.name)}>Download</a> : null}
       </article>)}
     </div>
-
     {failed > 0 && !busy ? <button className="nm-text-button" onClick={() => runScan(true)}>Retry failed scans</button> : null}
     <p className="nm-batch__privacy">🔒 Originals never leave your device. ZIP creation also happens locally. NoMeta does not upload the images for this workflow.</p>
   </section>;
