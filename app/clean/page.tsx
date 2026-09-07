@@ -7,6 +7,7 @@ import { MetadataRow } from '../../components/privacy/MetadataRow';
 import { CleaningMode } from '../../components/privacy/CleaningMode';
 
 import { UploadExperience } from '../../components/uploader/UploadExperience';
+import { CleanerExperience } from '../../components/cleaner/CleanerExperience';
 
 export default function CleanPage() {
   return <><Nav/><main className="nm-page"><div className="nm-container">
