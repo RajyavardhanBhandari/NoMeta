@@ -8,7 +8,7 @@ import { cleanImage, verifyCleanedImage, type CleaningMode } from '../../lib/met
 import { createLocalZip } from '../../lib/uploads/zip';
 import { Button } from '../ui/Button';
 
-export type BatchStage = 'queued' | 'scanning' | 'scanned' | 'cleaning' | 'verified' | 'error';
+export type BatchStage = 'queued' | 'scanning' | 'scanned' | 'cleaning' | 'awaiting_entitlement' | 'verified' | 'error';
 type BatchItem = UploadItem & { stage: BatchStage; result?: MetadataResult; cleanedBlob?: Blob; downloadUrl?: string; error?: string };
 
 function outputName(name: string) { const dot = name.lastIndexOf('.'); return `cleaned-${dot > 0 ? name.slice(0, dot) : name}${dot > 0 ? name.slice(dot) : ''}`; }
@@ -16,7 +16,7 @@ function outputName(name: string) { const dot = name.lastIndexOf('.'); return `c
 async function recordSuccessfulCleaning(item: BatchItem, mode: CleaningMode) {
   const response = await fetch('/api/cleaning/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ referenceId: item.id, mode, format: item.file.type, fileSize: item.file.size }) });
   let data: { error?: string } = {}; try { data = await response.json(); } catch {}
-  if (!response.ok) throw new Error(response.status === 401 ? 'Please sign in before cleaning a photo. Your original file stays on this device.' : data.error || 'NoMeta could not confirm your cleaning allowance. Please try again.');
+  if (!response.ok) throw new Error(response.status === 401 ? 'Please sign in before downloading. Your cleaned image is still on this device.' : data.error || 'NoMeta could not confirm your cleaning allowance. Please try again.');
 }
 
 function triggerDownload(url: string, filename: string) { const anchor = document.createElement('a'); anchor.href = url; anchor.download = filename; anchor.rel = 'noopener'; document.body.appendChild(anchor); anchor.click(); anchor.remove(); }
@@ -35,11 +35,12 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
   const scanned = items.filter(i => i.result).length;
   const completed = items.filter(i => i.stage === 'verified').length;
   const failed = items.filter(i => i.stage === 'error').length;
+  const awaiting = items.filter(i => i.stage === 'awaiting_entitlement').length;
   const scanning = items.filter(i => i.stage === 'scanning').length;
   const cleaning = items.filter(i => i.stage === 'cleaning').length;
   const metadataCount = items.reduce((n, i) => n + (i.result?.entries.length ?? 0), 0);
-  const cleaned = items.filter(i => i.cleanedBlob);
-  const allScanned = items.length > 0 && items.every(i => ['scanned', 'cleaning', 'verified', 'error'].includes(i.stage));
+  const cleaned = items.filter(i => i.stage === 'verified' && i.cleanedBlob && i.downloadUrl);
+  const allScanned = items.length > 0 && items.every(i => ['scanned', 'cleaning', 'awaiting_entitlement', 'verified', 'error'].includes(i.stage));
   const readyToClean = items.filter(i => i.stage === 'scanned').length;
   const progress = items.length ? Math.round((completed / items.length) * 100) : 0;
 
@@ -64,6 +65,17 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const confirmEntitlement = async (item: BatchItem) => {
+    try {
+      await recordSuccessfulCleaning(item, mode);
+      update(item.id, { stage: 'verified', error: undefined });
+      return true;
+    } catch (e) {
+      update(item.id, { stage: 'awaiting_entitlement', error: e instanceof Error ? e.message : 'Unable to confirm your cleaning allowance.' });
+      return false;
+    }
+  };
+
   const runClean = async () => {
     if (busy || readyToClean === 0) return;
     setBusy(true); abortRef.current = new AbortController();
@@ -76,12 +88,22 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
           const blob = await cleanImage(item.file, mode);
           const check = await verifyCleanedImage(blob);
           if (!check.verified) throw new Error(`${check.remainingMetadata} supported metadata item(s) remain after cleaning.`);
-          await recordSuccessfulCleaning(item, mode);
-          const url = URL.createObjectURL(blob); urlsRef.current.push(url);
-          update(item.id, { stage: 'verified', cleanedBlob: blob, downloadUrl: url });
-        } catch (e) { update(item.id, { stage: 'error', error: e instanceof Error ? e.message : 'Cleaning failed.' }); }
+          const url = URL.createObjectURL(blob);
+          urlsRef.current.push(url);
+          update(item.id, { stage: 'awaiting_entitlement', cleanedBlob: blob, downloadUrl: url, error: undefined });
+          await confirmEntitlement({ ...item, cleanedBlob: blob, downloadUrl: url, stage: 'awaiting_entitlement' });
+        } catch (e) {
+          update(item.id, { stage: 'error', error: e instanceof Error ? e.message : 'Cleaning failed.' });
+        }
       }
     } finally { setBusy(false); abortRef.current = null; }
+  };
+
+  const retryEntitlement = async (item: BatchItem) => {
+    if (busy || !item.cleanedBlob || !item.downloadUrl) return;
+    setBusy(true);
+    try { await confirmEntitlement(item); }
+    finally { setBusy(false); }
   };
 
   const cancel = () => { abortRef.current?.abort(); setBusy(false); };
@@ -99,11 +121,12 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
     if (!items.length) return 'No photos selected';
     if (completed === items.length) return `${completed} ${completed === 1 ? 'photo is' : 'photos are'} ready to download`;
     if (cleaning > 0) return `Cleaning ${cleaning} photo${cleaning === 1 ? '' : 's'}…`;
+    if (awaiting > 0) return `Confirming ${awaiting} cleaned photo${awaiting === 1 ? '' : 's'}…`;
     if (scanning > 0) return `Scanning ${scanning} photo${scanning === 1 ? '' : 's'}…`;
     if (allScanned && readyToClean > 0) return `${readyToClean} photo${readyToClean === 1 ? '' : 's'} ready to clean`;
     if (failed > 0) return `${failed} photo${failed === 1 ? '' : 's'} need attention`;
     return 'Preparing your photos…';
-  }, [items.length, completed, cleaning, scanning, allScanned, readyToClean, failed]);
+  }, [items.length, completed, cleaning, awaiting, scanning, allScanned, readyToClean, failed]);
 
   return <section className="nm-batch" aria-live="polite">
     <div className="nm-batch__header">
@@ -128,14 +151,15 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
       <img src={item.previewUrl} alt="" />
       <div className="nm-batch-item__body"><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)} · {item.result ? `${item.result.entries.length} metadata item${item.result.entries.length === 1 ? '' : 's'} found` : 'Waiting to scan'}</span>{item.error ? <small className="nm-batch-item__error">{item.error}</small> : null}</div>
       <div className={`nm-batch-status nm-batch-status--${item.stage}`}><i aria-hidden="true" />{label(item.stage, index + 1, items.length)}</div>
-      {item.downloadUrl ? <button type="button" className="nm-button nm-button--secondary nm-batch-download" onClick={() => downloadOne(item)}>Download</button> : null}
+      {item.stage === 'awaiting_entitlement' ? <button type="button" className="nm-button nm-button--secondary nm-batch-download" onClick={() => retryEntitlement(item)} disabled={busy}>Retry confirmation</button> : null}
+      {item.stage === 'verified' && item.downloadUrl ? <button type="button" className="nm-button nm-button--secondary nm-batch-download" onClick={() => downloadOne(item)}>Download</button> : null}
     </article>)}</div>
 
-    {completed > 0 ? <div className="nm-batch__success"><div className="nm-batch__success-icon" aria-hidden="true">✓</div><div><strong>Your clean copy{completed > 1 ? 'ies are' : ' is'} ready.</strong><span>Download individual photos above or get everything as one ZIP. ZIP creation stays on your device.</span></div></div> : null}
+    {completed > 0 ? <div className="nm-batch__success"><div className="nm-batch__success-icon" aria-hidden="true">✓</div><div><strong>Your clean copy{completed > 1 ? 'ies are' : ' is'} ready.</strong><span>Download individual photos above or get everything as one ZIP. ZIP creation stays on your device.</span></div><Button variant="primary" onClick={downloadAll} disabled={zipBusy}>{zipBusy ? 'Preparing download…' : completed > 1 ? 'Download all clean photos' : 'Download clean photo'}</Button></div> : null}
     {onReset ? <button type="button" className="nm-text-button" onClick={() => { if (!busy) onReset(); }}>Choose different photos</button> : null}
     <p className="nm-batch__privacy">🔒 Your original photos are processed in your browser and are not uploaded or stored by NoMeta. Only account, usage and billing information is sent to the server.</p>
   </section>;
 }
 
-function label(stage: BatchStage, n: number, total: number) { if (stage === 'queued') return 'Queued'; if (stage === 'scanning') return `Scanning ${n}/${total}`; if (stage === 'scanned') return 'Scanned'; if (stage === 'cleaning') return 'Cleaning'; if (stage === 'verified') return '✓ Ready'; return 'Needs attention'; }
+function label(stage: BatchStage, n: number, total: number) { if (stage === 'queued') return 'Queued'; if (stage === 'scanning') return `Scanning ${n}/${total}`; if (stage === 'scanned') return 'Scanned'; if (stage === 'cleaning') return 'Cleaning'; if (stage === 'awaiting_entitlement') return 'Confirming'; if (stage === 'verified') return '✓ Ready'; return 'Needs attention'; }
 function formatBytes(bytes: number) { if (!bytes) return '0 B'; const units = ['B', 'KB', 'MB', 'GB']; const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1); return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`; }
