@@ -1,133 +1,95 @@
-import type { CleanResult, VerifyResult } from './types';
-import { scanImage } from './scanner';
+export type CleaningMode = 'standard' | 'maximum';
 
-// ─── JPEG ──────────────────────────────────────────────────────────────────
+const decoder = new TextDecoder('latin1');
 
-function cleanJpeg(bytes: Uint8Array): { data: Uint8Array; removedCount: number } {
-  const out: number[] = [0xff, 0xd8]; // keep SOI
-  let removedCount = 0;
-  let i = 2;
-
-  while (i < bytes.length - 1) {
-    if (bytes[i] !== 0xff) break;
-    const marker = bytes[i + 1];
-
-    // Keep SOS and everything after it (image data)
-    if (marker === 0xda) {
-      out.push(...bytes.slice(i));
-      break;
-    }
-
-    const segLen = (bytes[i + 2] << 8) | bytes[i + 3];
-
-    // Remove APP segments (0xe0–0xef) and COM
-    if ((marker >= 0xe0 && marker <= 0xef) || marker === 0xfe) {
-      removedCount++;
-      i += 2 + segLen;
-      continue;
-    }
-
-    // Keep everything else (DQT, DHT, SOF, etc.)
-    out.push(...bytes.slice(i, i + 2 + segLen));
-    i += 2 + segLen;
+function jpegClean(input: ArrayBuffer): Uint8Array {
+  const src = new Uint8Array(input);
+  if (src.length < 4 || src[0] !== 0xff || src[1] !== 0xd8) throw new Error('Invalid JPEG file.');
+  const out: number[] = [0xff, 0xd8];
+  let p = 2;
+  while (p < src.length) {
+    if (src[p] !== 0xff) { out.push(src[p++]); continue; }
+    let markerStart = p;
+    while (p < src.length && src[p] === 0xff) p++;
+    if (p >= src.length) break;
+    const marker = src[p++];
+    if (marker === 0xd9) { out.push(0xff, marker); break; }
+    if (marker === 0xda) { out.push(0xff, marker); out.push(src[p], src[p+1]); p += 2; out.push(...src.subarray(p)); break; }
+    if (marker >= 0xd0 && marker <= 0xd7) { out.push(0xff, marker); continue; }
+    if (p + 2 > src.length) throw new Error('Malformed JPEG segment.');
+    const len = (src[p] << 8) | src[p + 1];
+    if (len < 2 || p + len > src.length) throw new Error('Malformed JPEG segment.');
+    const payload = src.subarray(p + 2, p + len);
+    const text = decoder.decode(payload);
+    const isApp1 = marker === 0xe1;
+    const isApp13 = marker === 0xed;
+    const isComment = marker === 0xfe;
+    const isPrivacyApp2 = marker === 0xe2 && /http:\/\/ns\.adobe\.com\/xap|xmp/i.test(text);
+    const remove = isApp1 || isApp13 || isComment || isPrivacyApp2;
+    if (!remove) out.push(0xff, marker, (len >> 8) & 255, len & 255, ...payload);
+    p = p + len;
+    if (p === markerStart) throw new Error('JPEG parser stalled.');
   }
-
-  return { data: new Uint8Array(out), removedCount };
+  return new Uint8Array(out);
 }
 
-// ─── PNG ───────────────────────────────────────────────────────────────────
-
-function cleanPng(bytes: Uint8Array, mode: 'standard' | 'maximum'): { data: Uint8Array; removedCount: number } {
-  const out: number[] = [...bytes.slice(0, 8)]; // PNG signature
-  const view = new DataView(bytes.buffer, bytes.byteOffset);
-  let i = 8;
-  let removedCount = 0;
-
-  const METADATA_CHUNKS = new Set(['tEXt', 'iTXt', 'zTXt', 'eXIf', 'tIME', 'pHYs', 'iCCP', 'sPLT', 'hIST']);
-  const MAXIMUM_EXTRA = new Set(['gAMA', 'cHRM', 'sRGB']);
-
-  while (i < bytes.length - 12) {
-    const length = view.getUint32(i, false);
-    const type = String.fromCharCode(bytes[i + 4], bytes[i + 5], bytes[i + 6], bytes[i + 7]);
-    const chunkTotal = 12 + length;
-
-    if (METADATA_CHUNKS.has(type) || (mode === 'maximum' && MAXIMUM_EXTRA.has(type))) {
-      removedCount++;
-    } else {
-      out.push(...bytes.slice(i, i + chunkTotal));
-    }
-
+function pngClean(input: ArrayBuffer): Uint8Array {
+  const src = new Uint8Array(input);
+  const signature = [137,80,78,71,13,10,26,10];
+  if (!signature.every((v,i)=>src[i]===v)) throw new Error('Invalid PNG file.');
+  const out: number[] = [...signature];
+  let p = 8;
+  const remove = new Set(['tEXt','zTXt','iTXt','eXIf']);
+  while (p + 12 <= src.length) {
+    const len = new DataView(src.buffer, src.byteOffset, src.byteLength).getUint32(p, false);
+    const type = String.fromCharCode(...src.subarray(p+4,p+8));
+    if (p + 12 + len > src.length) throw new Error('Malformed PNG chunk.');
+    if (!remove.has(type)) out.push(...src.subarray(p,p+12+len));
+    p += 12 + len;
     if (type === 'IEND') break;
-    i += chunkTotal;
   }
-
-  return { data: new Uint8Array(out), removedCount };
+  if (p > src.length) throw new Error('Malformed PNG file.');
+  return new Uint8Array(out);
 }
 
-// ─── WebP ──────────────────────────────────────────────────────────────────
-
-function cleanWebp(bytes: Uint8Array): { data: Uint8Array; removedCount: number } {
-  if (bytes.length < 12) return { data: bytes, removedCount: 0 };
-  const view = new DataView(bytes.buffer, bytes.byteOffset);
-  const chunks: Uint8Array[] = [];
-  let removedCount = 0;
-
-  const REMOVE_CHUNKS = new Set(['EXIF', 'XMP ', 'ICCP']);
-  let i = 12;
-
-  while (i < bytes.length - 8) {
-    const chunkType = String.fromCharCode(bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]);
-    const chunkSize = view.getUint32(i + 4, true);
-    const paddedSize = chunkSize + (chunkSize & 1);
-    const chunkTotal = 8 + paddedSize;
-
-    if (REMOVE_CHUNKS.has(chunkType)) {
-      removedCount++;
-    } else {
-      chunks.push(bytes.slice(i, i + chunkTotal));
-    }
-    i += chunkTotal;
+function webpClean(input: ArrayBuffer): Uint8Array {
+  const src = new Uint8Array(input);
+  const header = String.fromCharCode(...src.subarray(0,4));
+  const form = String.fromCharCode(...src.subarray(8,12));
+  if (header !== 'RIFF' || form !== 'WEBP') throw new Error('Invalid WebP file.');
+  const out: number[] = [...src.subarray(0,12)];
+  let p = 12;
+  while (p + 8 <= src.length) {
+    const type = String.fromCharCode(...src.subarray(p,p+4));
+    const size = new DataView(src.buffer, src.byteOffset, src.byteLength).getUint32(p+4,true);
+    const total = 8 + size + (size % 2);
+    if (p + total > src.length) throw new Error('Malformed WebP chunk.');
+    if (type !== 'EXIF' && type !== 'XMP ') out.push(...src.subarray(p,p+total));
+    p += total;
   }
-
-  const payloadSize = chunks.reduce((s, c) => s + c.length, 0);
-  const out = new Uint8Array(12 + payloadSize);
-  out.set(bytes.slice(0, 12)); // RIFF header + WEBP
-  new DataView(out.buffer).setUint32(4, 4 + payloadSize, true); // update RIFF size
-  let off = 12;
-  for (const c of chunks) { out.set(c, off); off += c.length; }
-
-  return { data: out, removedCount };
+  return new Uint8Array(out);
 }
 
-// ─── Public API ────────────────────────────────────────────────────────────
-
-export async function cleanImage(file: File, mode: 'standard' | 'maximum'): Promise<File> {
+export async function cleanImage(file: File, mode: CleaningMode): Promise<Blob> {
+  // Both modes use structural metadata removal in V1. Maximum Privacy is deliberately
+  // conservative: it removes known privacy-bearing metadata without re-encoding pixels.
+  void mode;
   const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let data: Uint8Array;
-  let removedCount: number;
-
-  if (bytes[0] === 0xff && bytes[1] === 0xd8) {
-    ({ data, removedCount } = cleanJpeg(bytes));
-  } else if (bytes[0] === 0x89 && bytes[1] === 0x50) {
-    ({ data, removedCount } = cleanPng(bytes, mode));
-  } else if (
-    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
-  ) {
-    ({ data, removedCount } = cleanWebp(bytes));
-  } else {
-    data = bytes;
-    removedCount = 0;
-  }
-
-  return new File([data.buffer as ArrayBuffer], file.name, { type: file.type });
+  let bytes: Uint8Array;
+  if (file.type === 'image/jpeg' || file.type === 'image/jpg') bytes = jpegClean(buffer);
+  else if (file.type === 'image/png') bytes = pngClean(buffer);
+  else if (file.type === 'image/webp') bytes = webpClean(buffer);
+  else throw new Error('Unsupported image format.');
+  // Copy into a standalone ArrayBuffer so BlobPart remains compatible with
+  // modern TypeScript's ArrayBufferLike typings (including SharedArrayBuffer).
+  const blobBytes = new Uint8Array(bytes.byteLength);
+  blobBytes.set(bytes);
+  return new Blob([blobBytes.buffer], { type: file.type || 'application/octet-stream' });
 }
 
-export async function verifyCleanedImage(file: File): Promise<VerifyResult> {
+export async function verifyCleanedImage(blob: Blob): Promise<{ verified: boolean; remainingMetadata: number }> {
+  const { scanImage } = await import('./scanner');
+  const file = new File([blob], 'nometa-cleaned', { type: blob.type });
   const result = await scanImage(file);
-  return {
-    verified: result.entries.length === 0,
-    remainingMetadata: result.entries.length,
-  };
+  return { verified: result.entries.length === 0, remainingMetadata: result.entries.length };
 }

@@ -1,11 +1,2 @@
-/**
- * Returns the canonical public site URL.
- * Falls back to localhost in development so redirects work without config.
- */
-export function getPublicSiteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` ||
-    'http://localhost:3000'
-  );
-}
+export function getPublicSiteUrl(){const value=process.env.NEXT_PUBLIC_SITE_URL?.trim();if(!value)return 'http://localhost:3000';try{const url=new URL(value);if(!['http:','https:'].includes(url.protocol))throw new Error();return url.origin;}catch{throw new Error('NEXT_PUBLIC_SITE_URL must be a valid http(s) URL');}}
+export function assertProductionSecrets(){if(process.env.NODE_ENV!=='production')return;const required=['NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','RAZORPAY_KEY_ID','RAZORPAY_KEY_SECRET','RAZORPAY_WEBHOOK_SECRET'];const missing=required.filter(k=>!process.env[k]);if(missing.length)throw new Error(`Missing production environment variables: ${missing.join(', ')}`);}

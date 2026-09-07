@@ -1,15 +1,3 @@
 import { createClient } from '@supabase/supabase-js';
-
-/**
- * Service-role client — bypasses RLS.
- * Only use in server-side code (API routes, server actions).
- * Never expose the service role key to the browser.
- */
-export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase admin environment is not configured');
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
+let admin: ReturnType<typeof createClient> | undefined;
+export function createAdminClient(){if(admin)return admin;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!url||!key)throw new Error('Supabase service-role environment variable is missing.');admin=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});return admin;}

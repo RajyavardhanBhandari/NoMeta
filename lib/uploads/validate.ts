@@ -1,21 +1,23 @@
-import { MAX_FILE_SIZE, SUPPORTED_IMAGE_TYPES, type SupportedImageType } from '@/types/upload';
+import { MAX_FILE_SIZE, SUPPORTED_IMAGE_TYPES, type SupportedImageType } from '../../types/upload';
 
-export interface ValidationResult {
-  valid: boolean;
-  error?: string;
-}
+export type ValidationResult =
+  | { valid: true; type: SupportedImageType }
+  | { valid: false; error: string };
 
 export function validateImageFile(file: File): ValidationResult {
-  if (!file || file.size === 0) {
-    return { valid: false, error: 'File is empty.' };
+  if (!SUPPORTED_IMAGE_TYPES.includes(file.type as SupportedImageType)) {
+    return { valid: false, error: 'Unsupported format. Use JPG, PNG or WebP.' };
   }
+
+  if (file.size === 0) {
+    return { valid: false, error: 'This file appears to be empty or unreadable.' };
+  }
+
   if (file.size > MAX_FILE_SIZE) {
-    return { valid: false, error: `File exceeds the ${formatFileSize(MAX_FILE_SIZE)} limit.` };
+    return { valid: false, error: 'This image is larger than 50 MB.' };
   }
-  if (!(SUPPORTED_IMAGE_TYPES as readonly string[]).includes(file.type)) {
-    return { valid: false, error: `Unsupported file type: ${file.type}. Supported: JPEG, PNG, WebP, HEIC.` };
-  }
-  return { valid: true };
+
+  return { valid: true, type: file.type as SupportedImageType };
 }
 
 export function formatFileSize(bytes: number): string {

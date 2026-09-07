@@ -1,13 +1,4 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-
-/**
- * Resolves the current session user from the server.
- * Redirects to sign-in if unauthenticated.
- */
-export async function requireUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/sign-in');
-  return user;
-}
+export async function getAuthenticatedUser(){const supabase=await createClient();const{data,error}=await supabase.auth.getUser();return error||!data.user?null:data.user;}
+export async function requireUser(){const user=await getAuthenticatedUser();if(!user)redirect('/auth/sign-in?next=/dashboard');return user;}
