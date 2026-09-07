@@ -1,0 +1,7 @@
+- lib/analytics/client.ts
+- components/ui/Button.tsx
+- components/ui/Card.tsx
+- components/ui/Nav.tsx
+- lib/payments/razorpay.ts
+- lib/security.ts
+- lib/security/request.ts
