@@ -55,3 +55,6 @@ design/          Design documentation
 
 ## Phase 8 — Payments
 The project now contains the server-side payment/credit boundaries for ₹5 per additional cleaning, Razorpay signature verification, webhook verification, and an immutable credit-ledger design. Live payment processing remains disabled until production auth/database and Razorpay credentials are configured.
+
+## Phase 9
+Payment UX and the user dashboard are now scaffolded on top of the Phase 8 server boundaries. Provider/database credentials are intentionally not included in the project.
