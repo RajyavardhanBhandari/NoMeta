@@ -14,6 +14,15 @@ export const metadata: Metadata = {
   creator: BRAND.owner,
   publisher: BRAND.owner,
   alternates: { canonical: '/' },
+  icons: {
+    icon: [
+      { url: '/logo-mark.svg', type: 'image/svg+xml' },
+      { url: '/logo-mark.svg', type: 'image/svg+xml', sizes: 'any' },
+    ],
+    shortcut: '/logo-mark.svg',
+    apple: [{ url: '/logo-mark.svg', type: 'image/svg+xml' }],
+  },
+  manifest: '/manifest.webmanifest',
   openGraph: {
     title: 'NoMeta — Remove hidden metadata from your photos',
     description: 'Find hidden metadata. Remove it. Share safely.',
