@@ -2,19 +2,56 @@
 
 Privacy-first image metadata scanner and cleaner.
 
-## Current build
-- Local JPG/JPEG, PNG and WebP processing.
-- Metadata scanning and privacy-risk classification.
-- Local cleaning and verification.
-- Batch cleaning and ZIP export.
-- Authentication UI/session boundary foundation.
-- **Phase 7: server-side daily free usage foundation (2 successful cleanings/day).**
+> Your photos reveal more than you think.
 
-## Privacy architecture
-Image files remain in the browser for the core workflow. Server-side account and usage state contains no image bytes or metadata payloads.
+NoMeta V1 helps people inspect and remove privacy-sensitive metadata from JPG/JPEG, PNG and WebP images. The core image workflow is designed to run locally in the browser.
 
-## Stack target
-Next.js + TypeScript, GitHub, Vercel, Supabase Auth/Postgres, Razorpay.
+## Current status
+- Phase 0 — Foundation: complete
+- Phase 1 — Design system & UI foundation: complete
+- Phase 2 — Upload experience: next
 
-## Important
-Authentication, database persistence and payments are foundation boundaries until their production providers are configured. Never commit secrets; use deployment environment variables.
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Then open the local Next.js development URL.
+
+## Validate
+
+```bash
+npm run typecheck
+npm run build
+```
+
+## Project structure
+
+```text
+app/             Routes and global styling
+components/      Reusable UI and privacy components
+lib/             Domain logic boundaries
+hooks/           React hooks
+public/          Static assets
+design/          Design documentation
+ tests/           Automated test space
+```
+
+## Product rules
+- 2 successful free image cleanings per registered user per calendar day.
+- Additional successful image cleanings: ₹5 each.
+- Razorpay will be used for verified payments.
+- Original images are not intended to be uploaded or stored for the core cleaning workflow.
+- Video/audio/PDF/API/extension features are deferred beyond V1.
+
+## Build status
+- Phase 0 — Foundation: complete
+- Phase 1 — Design system: complete
+- Phase 2 — Upload experience: complete
+- Phase 3 — Metadata scanner: next
+
+
+## Phase 8 — Payments
+The project now contains the server-side payment/credit boundaries for ₹5 per additional cleaning, Razorpay signature verification, webhook verification, and an immutable credit-ledger design. Live payment processing remains disabled until production auth/database and Razorpay credentials are configured.
