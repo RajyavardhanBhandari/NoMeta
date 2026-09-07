@@ -16,11 +16,11 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   icons: {
     icon: [
-      { url: '/logo-mark.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/logo-mark.svg', type: 'image/svg+xml', sizes: 'any' },
     ],
-    shortcut: '/logo-mark.svg',
-    apple: [{ url: '/logo-mark.svg', type: 'image/svg+xml' }],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
   manifest: '/manifest.webmanifest',
   openGraph: {
