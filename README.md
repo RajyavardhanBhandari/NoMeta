@@ -45,3 +45,9 @@ design/          Design documentation
 - Razorpay will be used for verified payments.
 - Original images are not intended to be uploaded or stored for the core cleaning workflow.
 - Video/audio/PDF/API/extension features are deferred beyond V1.
+
+## Build status
+- Phase 0 — Foundation: complete
+- Phase 1 — Design system: complete
+- Phase 2 — Upload experience: complete
+- Phase 3 — Metadata scanner: next

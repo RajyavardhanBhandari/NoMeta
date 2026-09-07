@@ -175,3 +175,35 @@ button { cursor: pointer; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.nm-visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+.nm-upload-zone { position: relative; display: flex; min-height: 310px; flex-direction: column; align-items: center; justify-content: center; padding: 34px; border: 1.5px dashed var(--line-strong); border-radius: var(--radius-lg); background: var(--surface); text-align: center; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.nm-upload-zone:hover, .nm-upload-zone.is-dragging { border-color: var(--ink); background: #fcfcfa; }
+.nm-upload-zone.is-dragging { transform: scale(1.005); }
+.nm-upload-zone__icon { width: 54px; height: 54px; display: grid; place-items: center; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-soft); }
+.nm-upload-zone h2 { margin: 0; font-size: 24px; letter-spacing: -.035em; }
+.nm-upload-zone p { margin: 8px 0 20px; color: var(--muted); font-size: 14px; }
+.nm-upload-zone__limit { margin-top: 14px; color: var(--faint); font-size: 11px; }
+.nm-upload-error { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; padding: 12px 14px; border: 1px solid #f1c9c5; border-radius: 12px; background: var(--red-soft); color: var(--red); font-size: 13px; line-height: 1.45; }
+.nm-upload-list { margin-top: 18px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+.nm-upload-list__head { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+.nm-upload-list__head strong, .nm-upload-list__head span { display: block; }
+.nm-upload-list__head strong { font-size: 14px; }
+.nm-upload-list__head span { margin-top: 3px; color: var(--muted); font-size: 12px; }
+.nm-text-button { border: 0; background: transparent; color: var(--muted); font-size: 12px; font-weight: 750; padding: 7px; }
+.nm-text-button:hover { color: var(--ink); }
+.nm-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.nm-file-card { position: relative; display: flex; align-items: center; min-width: 0; gap: 11px; padding: 9px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-soft); }
+.nm-file-card img { width: 52px; height: 52px; flex: 0 0 auto; object-fit: cover; border-radius: 9px; background: #ddd; }
+.nm-file-card__body { min-width: 0; padding-right: 20px; }
+.nm-file-card__body strong, .nm-file-card__body span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nm-file-card__body strong { font-size: 12px; }
+.nm-file-card__body span { margin-top: 4px; color: var(--faint); font-size: 11px; }
+.nm-file-card__remove { position: absolute; top: 6px; right: 7px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.9); color: var(--muted); font-size: 18px; line-height: 18px; }
+.nm-file-card__remove:hover { background: var(--surface); color: var(--ink); }
+.nm-upload-actions { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 14px; padding: 15px 17px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-soft); }
+.nm-upload-actions strong, .nm-upload-actions span { display: block; }
+.nm-upload-actions strong { font-size: 13px; }
+.nm-upload-actions span { margin-top: 3px; color: var(--muted); font-size: 12px; }
+@media (max-width: 900px) { .nm-upload-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .nm-upload-zone { min-height: 270px; padding: 26px 18px; } .nm-upload-grid { grid-template-columns: 1fr; } .nm-upload-actions { align-items: stretch; flex-direction: column; } .nm-upload-actions .nm-button { width: 100%; } }
