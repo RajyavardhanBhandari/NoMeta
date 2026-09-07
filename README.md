@@ -1,26 +1,22 @@
-# NoMeta — Phase 19
+# NoMeta — V1 Ownership & Ecosystem Pass
 
-NoMeta v1.0.0 launch/release package.
+NoMeta is a privacy-first image metadata scanning and cleaning application. Core image processing is designed to run locally in the browser.
 
-Phase 19 adds the production launch runbook, release gates, smoke tests, rollback guidance and version-tag instructions.
+## Creator
 
-## Release commit
+**Rajyavardhan Bhandari**
 
-```bash
-git add .
-git commit -m "feat: launch NoMeta v1"
-```
+## Ecosystem
 
-## Release tag
+NoMeta is part of the broader **The Founder Nation** ecosystem. Cross-promotion is intentionally limited to relevant, non-intrusive placements.
 
-After production gates pass:
+## Current release
 
-```bash
-git tag -a v1.0.0 -m "NoMeta v1.0.0"
-git push origin v1.0.0
-```
+Phases 0–20 established the V1 product, monetization foundation, privacy/legal, SEO, analytics, performance, mobile, security, testing, UX, production preparation, launch runbook and V2 roadmap.
 
-See `19_LAUNCH_RUNBOOK.md` before deploying.
+Phase 21 applies ownership, branding and ecosystem attribution across the project.
 
-## Phase 20
-Post-launch operations and V2 roadmap are documented in `20_POST_LAUNCH_V2_ROADMAP.md`.
+See:
+- `21_OWNERSHIP_BRANDING_ECOSYSTEM.md`
+- `NOTICE.md`
+- `20_POST_LAUNCH_V2_ROADMAP.md`

@@ -66,6 +66,6 @@ export default function HomePage() {
         </div>
       </section>
     </main>
-    <footer className="nm-footer"><div className="nm-container nm-footer__row"><span>© 2026 NoMeta</span><div className="nm-footer__links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/how-it-works">How it works</a></div></div></footer>
+    <footer className="nm-footer"><div className="nm-container nm-footer__row"><span>© {new Date().getFullYear()} NoMeta · Created by Rajyavardhan Bhandari</span><div className="nm-footer__links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/how-it-works">How it works</a><a href="https://thefoundernation.com/?utm_source=nometa&utm_medium=referral&utm_campaign=nometa_v1" target="_blank" rel="noreferrer">The Founder Nation</a></div></div></footer>
   </>;
 }

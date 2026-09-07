@@ -257,3 +257,6 @@ button { cursor: pointer; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+.nm-footer__attribution { max-width: 560px; font-size: 12px; color: var(--faint); }
+.nm-footer__attribution a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
