@@ -65,3 +65,6 @@ Privacy, terms, data/cookie disclosure, security/trust, and payment/refund pages
 
 ## Phase 12
 Privacy-safe first-party analytics foundation is included. Events are allowlisted and blocked from carrying image, EXIF, GPS, or identity fields. Production persistence remains a deployment task.
+
+## Phase 13
+Performance and browser-processing safeguards are included in `13_PERFORMANCE.md` and `lib/utils/performance.ts`.
