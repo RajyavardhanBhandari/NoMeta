@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { trackEvent } from '../../lib/analytics/client';
 
 interface UsageState { configured: boolean; limit: number; used: number; remaining: number; message?: string }
 interface CreditState { configured: boolean; credits: number; message?: string }
@@ -27,6 +28,7 @@ export function DashboardExperience() {
   useEffect(() => { void refresh(); }, []);
 
   async function buyOneCredit() {
+    trackEvent('checkout_started', { product: 'single_credit' });
     setPurchaseState('loading');
     try {
       const response = await fetch('/api/payment/create-order', { method: 'POST' });
@@ -44,7 +46,8 @@ export function DashboardExperience() {
           name: 'NoMeta', description: '1 image cleaning credit', order_id: data.orderId,
           handler: async (payment: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
             const verify = await fetch('/api/payment/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payment) });
-            if (verify.ok) await refresh();
+            if (verify.ok) { trackEvent('payment_verified', { product: 'single_credit' }); await refresh(); }
+            else trackEvent('payment_failed', { product: 'single_credit' });
           },
           modal: { ondismiss: () => setPurchaseState('idle') },
         });

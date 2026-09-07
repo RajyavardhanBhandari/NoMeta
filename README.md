@@ -61,3 +61,7 @@ Payment UX and the user dashboard are scaffolded on top of the Phase 8 server bo
 
 ## Phase 10
 Privacy, terms, data/cookie disclosure, security/trust, and payment/refund pages are included. These are V1 policy drafts and must be finalized to match the production legal entity, jurisdiction, contacts, retention periods, and deployed implementation before launch.
+
+
+## Phase 12
+Privacy-safe first-party analytics foundation is included. Events are allowlisted and blocked from carrying image, EXIF, GPS, or identity fields. Production persistence remains a deployment task.
