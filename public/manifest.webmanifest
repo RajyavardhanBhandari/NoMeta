@@ -4,8 +4,11 @@
   "description": "Find hidden photo metadata, remove it locally, and share more safely.",
   "start_url": "/",
   "display": "standalone",
+  "background_color": "#fafaf8",
+  "theme_color": "#111111",
   "lang": "en",
   "icons": [
-    { "src": "/logo-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/logo-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
