@@ -20,7 +20,12 @@ async function recordSuccessfulCleaning(item: BatchItem, mode: CleaningMode) {
   const response = await fetch('/api/cleaning/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ referenceId: item.id, mode, format: item.file.type, bytes: item.file.size }),
+    body: JSON.stringify({
+      referenceId: item.id,
+      mode,
+      format: item.file.type,
+      fileSize: item.file.size,
+    }),
   });
   let data: { error?: string } = {};
   try { data = await response.json(); } catch {}
