@@ -26,8 +26,12 @@ export function isAllowedOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return true;
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!configured) return process.env.NODE_ENV !== 'production';
-  try { return new URL(origin).origin === new URL(configured).origin; } catch { return false; }
+  try {
+    const expected = configured ? new URL(configured).origin : new URL(request.url).origin;
+    return new URL(origin).origin === expected;
+  } catch {
+    return false;
+  }
 }
 
 export function safeTimingEqual(a: string, b: string): boolean {
