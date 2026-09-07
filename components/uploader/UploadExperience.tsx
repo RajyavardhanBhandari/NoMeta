@@ -1,11 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { UploadZone } from './UploadZone';
 import type { UploadItem } from '../../types/upload';
 import { BatchExperience } from '../cleaner/BatchExperience';
 
 export function UploadExperience() {
-  const [files, setFiles] = React.useState<UploadItem[]>([]);
+  const [files, setFiles] = useState<UploadItem[]>([]);
 
   return (
     <div>
