@@ -8,8 +8,8 @@ import type { UploadItem } from '../../types/upload';
 
 const MAX_FILES = 25;
 
-function makeId(file: File) {
-  return `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID?.() ?? Math.random()}`;
+function makeId() {
+  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 export function UploadZone({ onFilesChange }: { onFilesChange?: (files: UploadItem[]) => void }) {
@@ -40,7 +40,7 @@ export function UploadZone({ onFilesChange }: { onFilesChange?: (files: UploadIt
       if (existingKeys.has(key)) continue;
       if (items.length + accepted.length >= MAX_FILES) break;
 
-      accepted.push({ id: makeId(file), file, previewUrl: URL.createObjectURL(file), status: 'ready' });
+      accepted.push({ id: makeId(), file, previewUrl: URL.createObjectURL(file), status: 'ready' });
       existingKeys.add(key);
     }
 
