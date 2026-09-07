@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-type IconName = 'arrow' | 'check' | 'shield' | 'scan' | 'download' | 'lock' | 'chevron' | 'spark' | 'upload' | 'info';
+type IconName = 'arrow' | 'check' | 'shield' | 'scan' | 'download' | 'lock' | 'chevron' | 'spark' | 'upload' | 'info' | 'alert';
 
 export function Icon({ name, size = 20, ...props }: SVGProps<SVGSVGElement> & { name: IconName; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true, ...props };
@@ -15,6 +15,7 @@ export function Icon({ name, size = 20, ...props }: SVGProps<SVGSVGElement> & { 
     spark: <><path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3Z"/><path d="m19 16 .6 2.4L22 19l-2.4.6L19 22l-.6-2.4L16 19l2.4-.6L19 16Z"/></>,
     upload: <><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></>,
     info: <><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></>,
+    alert: <><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 16h.01"/></>,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }

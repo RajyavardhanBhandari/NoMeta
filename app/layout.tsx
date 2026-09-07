@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { PageViewTracker } from '../components/analytics/PageViewTracker';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'NoMeta — Remove hidden metadata from your photos',
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body><PageViewTracker />{children}</body>
+      <body><PageViewTracker /><ErrorBoundary>{children}</ErrorBoundary></body>
     </html>
   );
 }
