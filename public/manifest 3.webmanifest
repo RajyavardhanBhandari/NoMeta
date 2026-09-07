@@ -1,0 +1,9 @@
+{
+  "name": "NoMeta — Photo Metadata Cleaner",
+  "short_name": "NoMeta",
+  "description": "Find hidden photo metadata, remove it locally, and share more safely.",
+  "start_url": "/",
+  "display": "standalone",
+  "lang": "en",
+  "icons": []
+}
