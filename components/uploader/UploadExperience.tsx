@@ -4,24 +4,18 @@ import { useState } from 'react';
 import { UploadZone } from './UploadZone';
 import type { UploadItem } from '../../types/upload';
 import { Button } from '../ui/Button';
-import { ScannerExperience } from '../scanner/ScannerExperience';
+import { BatchExperience } from '../cleaner/BatchExperience';
 
 export function UploadExperience() {
   const [files, setFiles] = useState<UploadItem[]>([]);
-  const [startScan, setStartScan] = useState(false);
+  const [start, setStart] = useState(false);
 
-  return (
-    <div>
-      <UploadZone onFilesChange={setFiles} />
-      {files.length > 0 && (
-        <div className="nm-upload-actions">
-          <div><strong>{files.length} ready</strong><span>Your photos have not left this browser.</span></div>
-          <Button variant="primary" onClick={() => setStartScan(true)}>
-            Scan {files.length === 1 ? 'photo' : 'photos'}
-          </Button>
-        </div>
-      )}
-      {startScan && <ScannerExperience files={files} />}
-    </div>
-  );
+  return <div>
+    <UploadZone onFilesChange={(next) => { setFiles(next); setStart(false); }} />
+    {files.length > 0 && !start && <div className="nm-upload-actions">
+      <div><strong>{files.length} ready</strong><span>Your photos have not left this browser.</span></div>
+      <Button variant="primary" onClick={() => setStart(true)}>Start local scan</Button>
+    </div>}
+    {start && <BatchExperience files={files} />}
+  </div>;
 }
