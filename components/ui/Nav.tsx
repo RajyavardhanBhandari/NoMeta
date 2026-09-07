@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { Button } from './Button';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Nav() {
   return (
@@ -15,8 +16,8 @@ export function Nav() {
         <div className="nm-nav__actions">
           <Link className="nm-nav__dashboard" href="/dashboard">Dashboard</Link>
           <Link className="nm-nav__login" href="/auth/sign-in">Log in</Link>
+          <ThemeToggle />
           <Button href="/auth/sign-up" variant="secondary">Sign up</Button>
-          <Button href="/clean" variant="primary">Scan a photo</Button>
         </div>
       </nav>
     </header>
