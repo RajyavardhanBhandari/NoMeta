@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { SINGLE_CLEANING_PRICE_INR } from '@/lib/payments/razorpay';
+import { isAllowedOrigin, jsonSecurityHeaders } from '@/lib/security';
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isAllowedOrigin(request)) return new NextResponse(null, { status: 403, headers: jsonSecurityHeaders() });
   // Production: authenticate user, create a Razorpay order server-side,
   // persist the order idempotently, and return only the public checkout data.
   return NextResponse.json({
@@ -10,5 +12,5 @@ export async function POST() {
     currency: 'INR',
     credits: 1,
     message: 'Razorpay order creation is ready for provider credentials and database wiring.',
-  });
+  }, { headers: jsonSecurityHeaders() });
 }
