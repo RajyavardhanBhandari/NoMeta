@@ -23,6 +23,9 @@ export function CleanerExperience({ files, results }: { files: UploadItem[]; res
         const blob = await cleanImage(files[i].file, mode);
         const check = await verifyCleanedImage(blob);
         if (!check.verified) throw new Error(`${files[i].file.name}: ${check.remainingMetadata} metadata item(s) remain after cleaning.`);
+        const referenceId = `${Date.now().toString(36)}-${crypto.randomUUID().replaceAll('-', '').slice(0, 16)}`;
+        const entitlement = await fetch('/api/cleaning/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ referenceId, mode, format: files[i].file.type.split('/')[1] || null, fileSize: files[i].file.size }) });
+        if (!entitlement.ok) { const data = await entitlement.json().catch(() => ({})); throw new Error(data.error || 'No cleaning entitlement available. Sign in or buy a credit.'); }
         urls.push(URL.createObjectURL(blob));
       }
       setDownloads(urls); setVerified(true); setStatus('Verified clean.');

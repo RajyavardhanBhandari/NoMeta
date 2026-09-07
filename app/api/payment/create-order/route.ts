@@ -1,16 +1,3 @@
-import { NextResponse } from 'next/server';
-import { SINGLE_CLEANING_PRICE_INR } from '@/lib/payments/razorpay';
-import { isAllowedOrigin, jsonSecurityHeaders } from '@/lib/security';
-
-export async function POST(request: Request) {
-  if (!isAllowedOrigin(request)) return new NextResponse(null, { status: 403, headers: jsonSecurityHeaders() });
-  // Production: authenticate user, create a Razorpay order server-side,
-  // persist the order idempotently, and return only the public checkout data.
-  return NextResponse.json({
-    configured: Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
-    amount: SINGLE_CLEANING_PRICE_INR * 100,
-    currency: 'INR',
-    credits: 1,
-    message: 'Razorpay order creation is ready for provider credentials and database wiring.',
-  }, { headers: jsonSecurityHeaders() });
-}
+import{NextResponse}from'next/server';import{randomUUID}from'node:crypto';import{createClient}from'@/lib/supabase/server';import{createAdminClient}from'@/lib/supabase/admin';import{createRazorpayOrder}from'@/lib/payments/razorpay-api';import{getProduct} from '@/lib/payments/catalog';
+import type {ProductId}from'@/lib/payments/catalog';import{isAllowedOrigin,jsonSecurityHeaders}from'@/lib/security';import{readBoundedText}from'@/lib/security/request';
+export async function POST(request:Request){if(!isAllowedOrigin(request))return new NextResponse(null,{status:403,headers:jsonSecurityHeaders()});try{const s=await createClient(),{data:{user}}=await s.auth.getUser();if(!user)return NextResponse.json({error:'Authentication required'},{status:401,headers:jsonSecurityHeaders()});const raw=await readBoundedText(request);const body=raw?JSON.parse(raw):{};const productId=(body?.product||'single_credit') as ProductId,product=getProduct(productId);if(!product)return NextResponse.json({error:'Invalid product'},{status:400,headers:jsonSecurityHeaders()});const receipt=`nm_${randomUUID().replaceAll('-','').slice(0,24)}`,order=await createRazorpayOrder(product.amountInr*100,receipt,{user_id:user.id,product:productId,credits:String(product.credits)}),admin=createAdminClient();const{error}=await admin.from('payment_orders').insert({user_id:user.id,razorpay_order_id:order.id,product_id:productId,credits:product.credits,amount_paise:order.amount,currency:order.currency,status:'created',receipt});if(error)throw new Error('PAYMENT_ORDER_PERSIST_FAILED');return NextResponse.json({configured:true,keyId:process.env.RAZORPAY_KEY_ID,orderId:order.id,amount:order.amount,currency:order.currency,credits:product.credits,product:productId,label:product.label},{headers:jsonSecurityHeaders()});}catch(e){const status=e instanceof Error&&e.message==='REQUEST_TOO_LARGE'?413:500;return NextResponse.json({error:status===413?'Request too large':'Unable to create payment order'},{status,headers:jsonSecurityHeaders()});}}

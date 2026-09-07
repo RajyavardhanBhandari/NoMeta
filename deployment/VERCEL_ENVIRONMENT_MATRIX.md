@@ -3,8 +3,9 @@
 | Variable | Preview | Production | Client exposed |
 |---|---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | Preview URL | Canonical HTTPS URL | Yes |
-| `AUTH_SECRET` | Preview secret | Production secret | No |
-| `DATABASE_URL` | Preview DB | Production DB | No |
+| `NEXT_PUBLIC_SUPABASE_URL` | Preview Supabase URL | Production Supabase URL | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Preview anon key | Production anon key | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Preview service role key | Production service role key | No |
 | `RAZORPAY_KEY_ID` | Test key ID | Production key ID | No* |
 | `RAZORPAY_KEY_SECRET` | Test secret | Production secret | No |
 | `RAZORPAY_WEBHOOK_SECRET` | Test webhook secret | Production webhook secret | No |
