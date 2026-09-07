@@ -12,6 +12,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Keep the existing Vercel variable names working while exposing the
+  // intentionally public Supabase browser configuration to the client.
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_SUPABASE_ANON_KEY,
+  },
   async headers() {
     return [
       { source: '/(.*)', headers: securityHeaders },
@@ -19,4 +26,5 @@ const nextConfig: NextConfig = {
     ];
   },
 };
+
 export default nextConfig;
