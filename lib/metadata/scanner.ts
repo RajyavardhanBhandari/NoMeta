@@ -77,7 +77,7 @@ const EXIF_NAMES: Record<number, string> = {
 const GPS_NAMES: Record<number, string> = { 0x0001:'GPSLatitudeRef',0x0002:'GPSLatitude',0x0003:'GPSLongitudeRef',0x0004:'GPSLongitude',0x0005:'GPSAltitudeRef',0x0006:'GPSAltitude',0x001e:'GPSMapDatum',0x001f:'GPSProcessingMethod',0x001d:'GPSDateStamp' };
 
 function readAscii(d: DataView, offset: number, count: number) { return new Uint8Array(d.buffer, d.byteOffset + offset, Math.max(0, Math.min(count, d.byteLength - offset))).reduce((s,b)=>s+(b ? String.fromCharCode(b):''),''); }
-function readTag(d: DataView, tiff: number, ifd: number, tag: number, le: boolean, gps = false) {
+function readTag(d: DataView, tiff: number, ifd: number, tag: number, le: boolean, gps = false): [string, string] {
   const count = u32(d, ifd + 4, le);
   const type = u16(d, ifd + 2, le);
   const base = ifd + 8;
@@ -86,15 +86,15 @@ function readTag(d: DataView, tiff: number, ifd: number, tag: number, le: boolea
   const ptr = len <= 4 ? base : tiff + u32(d, base, le);
   const name = (gps ? GPS_NAMES[tag] : EXIF_NAMES[tag]) || `Tag 0x${tag.toString(16)}`;
   try {
-    if (type === 2) return [name, readAscii(d, ptr, count).replace(/\0+$/, '')] as const;
-    if (type === 1 || type === 7) return [name, Array.from(new Uint8Array(d.buffer, d.byteOffset + ptr, Math.min(count, d.byteLength - ptr))).join(', ')] as const;
-    if (type === 3) return [name, count === 1 ? String(u16(d, ptr, le)) : Array.from({length:Math.min(count,16)},(_,i)=>u16(d,ptr+i*2,le)).join(', ')] as const;
-    if (type === 4) return [name, count === 1 ? String(u32(d, ptr, le)) : Array.from({length:Math.min(count,16)},(_,i)=>u32(d,ptr+i*4,le)).join(', ')] as const;
-    if (type === 5) return [name, count === 1 ? String(rational(d, ptr, le)) : Array.from({length:Math.min(count,8)},(_,i)=>String(rational(d,ptr+i*8,le))).join(', ')] as const;
-    if (type === 9) return [name, String(d.getInt32(ptr, le))] as const;
-    if (type === 10) return [name, String((d.getInt32(ptr, le) / (d.getInt32(ptr+4, le) || 1)))] as const;
-  } catch { return [name, 'Unreadable value'] as const; }
-  return [name, 'Present'] as const;
+    if (type === 2) return [name, readAscii(d, ptr, count).replace(/\0+$/, '')];
+    if (type === 1 || type === 7) return [name, Array.from(new Uint8Array(d.buffer, d.byteOffset + ptr, Math.min(count, d.byteLength - ptr))).join(', ')];
+    if (type === 3) return [name, count === 1 ? String(u16(d, ptr, le)) : Array.from({length:Math.min(count,16)},(_,i)=>u16(d,ptr+i*2,le)).join(', ')];
+    if (type === 4) return [name, count === 1 ? String(u32(d, ptr, le)) : Array.from({length:Math.min(count,16)},(_,i)=>u32(d,ptr+i*4,le)).join(', ')];
+    if (type === 5) return [name, count === 1 ? String(rational(d, ptr, le)) : Array.from({length:Math.min(count,8)},(_,i)=>String(rational(d,ptr+i*8,le))).join(', ')];
+    if (type === 9) return [name, String(d.getInt32(ptr, le))];
+    if (type === 10) return [name, String((d.getInt32(ptr, le) / (d.getInt32(ptr+4, le) || 1)))];
+  } catch { return [name, 'Unreadable value']; }
+  return [name, 'Present'];
 }
 
 function parseIFD(d: DataView, tiff: number, offset: number, le: boolean, gps = false, seen = new Set<number>()) {

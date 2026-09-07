@@ -40,5 +40,9 @@ export async function createLocalZip(files: { name: string; blob: Blob }[]): Pro
   const centralSize = centralParts.reduce((n, p) => n + p.length, 0);
   const centralOffset = offset;
   const end = concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(centralSize), u32(centralOffset), u16(0));
-  return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
+  const zipBytes = concat(...localParts, ...centralParts, end);
+  // Use a copied ArrayBuffer to satisfy modern BlobPart typings.
+  const blobBytes = new Uint8Array(zipBytes.byteLength);
+  blobBytes.set(zipBytes);
+  return new Blob([blobBytes.buffer], { type: 'application/zip' });
 }

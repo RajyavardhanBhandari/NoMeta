@@ -80,7 +80,11 @@ export async function cleanImage(file: File, mode: CleaningMode): Promise<Blob> 
   else if (file.type === 'image/png') bytes = pngClean(buffer);
   else if (file.type === 'image/webp') bytes = webpClean(buffer);
   else throw new Error('Unsupported image format.');
-  return new Blob([bytes], { type: file.type || 'application/octet-stream' });
+  // Copy into a standalone ArrayBuffer so BlobPart remains compatible with
+  // modern TypeScript's ArrayBufferLike typings (including SharedArrayBuffer).
+  const blobBytes = new Uint8Array(bytes.byteLength);
+  blobBytes.set(bytes);
+  return new Blob([blobBytes.buffer], { type: file.type || 'application/octet-stream' });
 }
 
 export async function verifyCleanedImage(blob: Blob): Promise<{ verified: boolean; remainingMetadata: number }> {
