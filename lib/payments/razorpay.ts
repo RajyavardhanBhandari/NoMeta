@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { safeTimingEqual } from '@/lib/security';
 
 export interface RazorpayConfig {
   keyId: string;
@@ -16,12 +17,12 @@ export function getRazorpayConfig(): RazorpayConfig {
 
 export function verifyRazorpayPaymentSignature(orderId: string, paymentId: string, signature: string, secret: string) {
   const expected = crypto.createHmac('sha256', secret).update(`${orderId}|${paymentId}`).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  return safeTimingEqual(expected, signature);
 }
 
 export function verifyRazorpayWebhookSignature(rawBody: string, signature: string, secret: string) {
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  return safeTimingEqual(expected, signature);
 }
 
 export const SINGLE_CLEANING_PRICE_INR = 5;

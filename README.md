@@ -1,5 +1,5 @@
-# NoMeta — Phase 14
+# NoMeta — Phase 15
 
-Phase 14 adds mobile photo-cleaning UX on top of Phase 13.
+Phase 15 hardens the application and payment boundaries with security headers, origin checks, safer signature comparison, and cache controls.
 
-**Next:** Phase 15 — Security hardening.
+**Next:** Phase 16 — testing.
