@@ -1,0 +1,3 @@
+export default function CleanPage() {
+  return <main style={{maxWidth:900,margin:'0 auto',padding:'72px 24px'}}><a href="/" style={{fontWeight:700}}>← NoMeta</a><h1 style={{fontSize:52,margin:'64px 0 16px'}}>Scan a photo</h1><p style={{color:'var(--muted)',fontSize:18}}>The upload and metadata engine will be implemented in the next phases. Phase 0 establishes the shell and contracts.</p><div style={{marginTop:36,padding:48,border:'2px dashed var(--border)',borderRadius:18,background:'var(--surface)',textAlign:'center'}}><strong>JPG · PNG · WebP</strong><p style={{color:'var(--muted)'}}>Drop a photo here or choose a file.</p></div></main>;
+}
