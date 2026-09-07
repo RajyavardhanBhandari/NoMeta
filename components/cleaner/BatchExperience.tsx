@@ -13,21 +13,15 @@ export type BatchItem = UploadItem & { stage: BatchStage; result?: MetadataResul
 
 function outputName(name: string) {
   const dot = name.lastIndexOf('.');
-  return `${dot > 0 ? name.slice(0, dot) : name}-cleaned${dot > 0 ? name.slice(dot) : ''}`;
+  return `cleaned-${dot > 0 ? name.slice(0, dot) : name}${dot > 0 ? name.slice(dot) : ''}`;
 }
 
 async function recordSuccessfulCleaning(item: BatchItem, mode: CleaningMode) {
   const response = await fetch('/api/cleaning/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      referenceId: item.id,
-      mode,
-      format: item.file.type,
-      bytes: item.file.size,
-    }),
+    body: JSON.stringify({ referenceId: item.id, mode, format: item.file.type, bytes: item.file.size }),
   });
-
   let data: { error?: string } = {};
   try { data = await response.json(); } catch {}
   if (!response.ok) throw new Error(data.error || 'Unable to record this cleaning. Your image was not uploaded.');
@@ -52,8 +46,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
   const allScanned = items.length > 0 && items.every(i => ['scanned','cleaning','verified'].includes(i.stage));
 
   const runScan = async (retryOnly = false) => {
-    setBusy(true);
-    abortRef.current = new AbortController();
+    setBusy(true); abortRef.current = new AbortController();
     try {
       const targets = items.filter(i => retryOnly ? i.stage === 'error' : i.stage === 'queued');
       for (const item of targets) {
@@ -66,8 +59,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
   };
 
   const runClean = async () => {
-    setBusy(true);
-    abortRef.current = new AbortController();
+    setBusy(true); abortRef.current = new AbortController();
     try {
       const targets = items.filter(i => i.stage === 'scanned' || i.stage === 'error');
       for (const item of targets) {
@@ -78,11 +70,7 @@ export function BatchExperience({ files }: { files: UploadItem[] }) {
           const blob = await cleanImage(item.file, mode);
           const check = await verifyCleanedImage(blob);
           if (!check.verified) throw new Error(`${check.remainingMetadata} supported metadata item(s) remain after cleaning.`);
-
-          // The image itself stays in the browser. Only entitlement/audit metadata
-          // is sent to the server after local cleaning and verification succeed.
           await recordSuccessfulCleaning(item, mode);
-
           const url = URL.createObjectURL(blob);
           urlsRef.current.push(url);
           update(item.id, { stage: 'verified', cleanedBlob: blob, downloadUrl: url });
