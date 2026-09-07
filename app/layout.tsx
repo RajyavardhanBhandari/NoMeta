@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './nometa-ux.css';
 import { PageViewTracker } from '../components/analytics/PageViewTracker';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { BRAND } from '../lib/brand';
