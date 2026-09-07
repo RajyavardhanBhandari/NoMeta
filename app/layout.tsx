@@ -1,20 +1,23 @@
 import type { Metadata } from 'next';
-import { BRAND } from '../lib/brand';
 import './globals.css';
 import { PageViewTracker } from '../components/analytics/PageViewTracker';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { BRAND } from '../lib/brand';
 
 export const metadata: Metadata = {
-  title: { default: 'NoMeta — Remove hidden metadata from your photos', template: '%s | NoMeta' },
-  description:
-    'Scan and remove hidden photo metadata locally in your browser. Find location, device, timestamp and other privacy-sensitive data before you share.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nometa.app'),
+  title: 'NoMeta — Remove hidden metadata from your photos',
   authors: [{ name: BRAND.owner }],
   creator: BRAND.owner,
   publisher: BRAND.owner,
+  description:
+    'Scan and remove hidden photo metadata locally in your browser. Find location, device, timestamp and other privacy-sensitive data before you share.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nometa.app'),
   alternates: { canonical: '/' },
   openGraph: {
     title: 'NoMeta — Remove hidden metadata from your photos',
+  authors: [{ name: BRAND.owner }],
+  creator: BRAND.owner,
+  publisher: BRAND.owner,
     description: 'Find hidden metadata. Remove it. Share safely.',
     type: 'website',
     url: '/',
@@ -31,10 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
-        <PageViewTracker />
-        <ErrorBoundary>{children}</ErrorBoundary>
-      </body>
+      <body><PageViewTracker /><ErrorBoundary>{children}</ErrorBoundary></body>
     </html>
   );
 }
