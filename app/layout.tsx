@@ -5,6 +5,7 @@ import './nometa-ux.css';
 import './workflow-polish.css';
 import './privacy-scanner.css';
 import './premium-ui.css';
+import './theme-visibility.css';
 import { PageViewTracker } from '../components/analytics/PageViewTracker';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { Footer } from '../components/ui/Footer';
