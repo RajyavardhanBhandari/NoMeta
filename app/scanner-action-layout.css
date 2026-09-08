@@ -1,25 +1,31 @@
-/* Scanner result actions: keep the primary action directly under its content. */
+/* Scanner result actions: keep primary actions in the hero action area instead of extending the tool vertically. */
 .nm-home-tool .nm-scanner-clean-card{
   display:flex!important;
   flex-direction:column!important;
   align-items:flex-start!important;
   gap:22px!important;
+  position:static!important;
 }
 .nm-home-tool .nm-scanner-clean-card>div{
   width:100%!important;
 }
 .nm-home-tool .nm-scanner-clean-card>button{
-  align-self:flex-start!important;
-  justify-self:auto!important;
-  width:auto!important;
-  min-width:240px!important;
+  position:absolute!important;
+  z-index:20!important;
+  left:calc(-100% - 52px)!important;
+  top:300px!important;
+  width:calc(100% - 10px)!important;
+  max-width:410px!important;
   min-height:58px!important;
   padding:15px 28px!important;
   font-size:16px!important;
   font-weight:850!important;
   border-radius:15px!important;
   margin:0!important;
-  flex:0 0 auto!important;
+  white-space:nowrap!important;
+}
+.nm-home-tool .nm-scanner-clean-card>button:hover{
+  transform:translateY(-2px)!important;
 }
 .nm-home-tool .nm-scanner-success{
   display:flex!important;
@@ -32,24 +38,34 @@
   min-width:0!important;
 }
 .nm-home-tool .nm-scanner-success>button{
-  order:3!important;
-  flex:0 0 auto!important;
-  align-self:flex-start!important;
-  width:auto!important;
-  min-width:240px!important;
+  position:absolute!important;
+  z-index:20!important;
+  left:calc(-100% - 52px)!important;
+  top:300px!important;
+  width:calc(100% - 10px)!important;
+  max-width:410px!important;
   min-height:58px!important;
   padding:15px 28px!important;
   font-size:16px!important;
   font-weight:850!important;
   border-radius:15px!important;
-  margin:2px 0 0 0!important;
+  margin:0!important;
+  white-space:nowrap!important;
 }
-.nm-home-tool .nm-scanner-clean-card>button:hover,
 .nm-home-tool .nm-scanner-success>button:hover{
   transform:translateY(-2px)!important;
 }
+@media(max-width:900px){
+  .nm-home-tool .nm-scanner-clean-card>button,
+  .nm-home-tool .nm-scanner-success>button{
+    position:static!important;
+    width:auto!important;
+    max-width:none!important;
+    min-width:240px!important;
+    margin-top:16px!important;
+  }
+}
 @media(max-width:600px){
-  .nm-home-tool .nm-scanner-clean-card{gap:16px!important}
   .nm-home-tool .nm-scanner-clean-card>button,
   .nm-home-tool .nm-scanner-success>button{
     width:100%!important;
@@ -57,5 +73,4 @@
     min-height:58px!important;
     font-size:16px!important;
   }
-  .nm-home-tool .nm-scanner-success{gap:14px!important}
 }
