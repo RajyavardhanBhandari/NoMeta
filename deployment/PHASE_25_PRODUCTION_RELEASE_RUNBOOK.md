@@ -56,11 +56,14 @@ For a fresh test account:
 
 1. Successful clean #1 → free entitlement consumed.
 2. Successful clean #2 → free entitlement consumed.
-3. Successful clean #3 with zero credits → paid entitlement required.
-4. Failed local clean → no usage consumed.
-5. Replaying the same completion reference → idempotent; no second charge.
-6. A user cannot complete cleaning on behalf of another user.
-7. Usage and credit decisions are made server-side.
+3. Successful clean #3 → free entitlement consumed.
+4. Successful clean #4 → free entitlement consumed.
+5. Successful clean #5 → free entitlement consumed.
+6. Successful clean #6 with zero credits → paid entitlement required.
+7. Failed local clean → no usage consumed.
+8. Replaying the same completion reference → idempotent; no second charge.
+9. A user cannot complete cleaning on behalf of another user.
+10. Usage and credit decisions are made server-side.
 
 ## 6. Razorpay Test Mode QA
 
