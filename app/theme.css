@@ -128,10 +128,20 @@ body { background: var(--canvas); color: var(--ink); }
 .nm-support-button { display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 11px; background: linear-gradient(135deg, #5447ee, #168fd1); color: #fff !important; text-decoration: none; font-size: 13px; font-weight: 800; }
 .nm-support-button:hover { filter: brightness(1.06); }
 
+.nm-privacy-callout { margin-top: 28px; display: flex; align-items: center; gap: 10px; padding: 16px 18px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface-soft); color: var(--ink); }
+.nm-privacy-callout strong { font-size: 13px; }
+.nm-privacy-callout span { color: var(--muted); font-size: 13px; }
+.nm-privacy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.nm-privacy-item { display: flex; gap: 16px; padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.nm-privacy-item h3 { margin: 2px 0 7px; font-size: 16px; }
+.nm-privacy-item p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
 @media (max-width: 760px) {
   .nm-nav__actions { gap: 8px; }
   .nm-nav__dashboard { display: none; }
   .nm-nav__login { font-size: 13px; }
   .nm-support-widget { right: 14px; bottom: 14px; }
   .nm-support-fab { min-height: 44px; padding: 0 14px; }
+  .nm-privacy-grid { grid-template-columns: 1fr; }
+  .nm-privacy-callout { align-items: flex-start; flex-direction: column; gap: 4px; }
 }
