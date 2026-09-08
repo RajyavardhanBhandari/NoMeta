@@ -29,7 +29,6 @@ export function ThemeToggle() {
       title={dark ? 'Light mode' : 'Dark mode'}
     >
       <span aria-hidden="true">{dark ? '☀' : '☾'}</span>
-      <span className="nm-theme-toggle__label">{dark ? 'Light' : 'Dark'}</span>
     </button>
   );
 }
