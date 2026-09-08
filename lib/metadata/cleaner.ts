@@ -60,5 +60,7 @@ export async function cleanImage(file: File, mode: CleaningMode): Promise<Blob> 
 }
 
 export async function verifyCleanedImage(blob: Blob): Promise<{verified:boolean;remainingMetadata:number}> {
-  const {scanImage}=await import('./scanner'); const file=new File([blob],'nometa-cleaned',{type:blob.type}); const result=await scanImage(file); return {verified:result.entries.length===0,remainingMetadata:result.entries.length};
+  const {scanImage}=await import('./scanner'); const file=new File([blob],'nometa-cleaned',{type:blob.type}); const result=await scanImage(file);
+  const remaining = result.entries.filter(entry => entry.sensitive || entry.category === 'software' || entry.category === 'provenance').length;
+  return {verified:remaining===0,remainingMetadata:remaining};
 }
