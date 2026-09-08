@@ -6,7 +6,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   href?: string;
   variant?: 'primary' | 'secondary' | 'ghost' | 'quiet';
-  icon?: 'arrow' | 'upload' | 'download' | 'check';
+  icon?: 'arrow' | 'upload' | 'download' | 'check' | 'plus';
 };
 
 export function Button({ children, href, variant = 'primary', icon, className = '', ...props }: ButtonProps) {
