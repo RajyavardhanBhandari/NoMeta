@@ -37,10 +37,7 @@
 .nm-home-tool .nm-scanner-hero--scanning .nm-scanner-visual__scanner{box-shadow:0 36px 95px rgba(15,23,42,.30),0 0 70px rgba(99,102,241,.23),inset 0 1px rgba(255,255,255,.14)!important}
 .nm-home-tool .nm-scanner-hero--scanned .nm-scanner-visual__scanner{box-shadow:0 36px 95px rgba(15,23,42,.28),0 0 70px rgba(240,198,107,.18),inset 0 1px rgba(255,255,255,.14)!important}
 .nm-home-tool .nm-scanner-hero--verified .nm-scanner-visual__scanner{box-shadow:0 36px 95px rgba(15,23,42,.26),0 0 75px rgba(99,215,154,.21),inset 0 1px rgba(255,255,255,.14)!important}
-
-/* Never show an empty scanner workspace. It only appears after a photo is selected. */
 .nm-home-tool>.nm-scanner-workspace{display:block!important}
-.nm-home-tool>.nm-scanner-hero+.nm-visually-hidden+.nm-scanner-workspace{margin-top:16px!important}
 .nm-home-tool .nm-scanner-workspace{max-width:none!important;margin-inline:0!important}
 
 /* Stronger, more editorial section rhythm. */
@@ -63,13 +60,18 @@
 
 /* Support: visible invitation, useful panel, still unobtrusive. */
 .nm-support-widget{z-index:100!important}
-.nm-support-fab{min-width:205px!important;min-height:62px!important;padding:0 21px!important;border:1px solid rgba(109,93,252,.25)!important;border-radius:18px!important;background:linear-gradient(135deg,#111217,#292344)!important;color:#fff!important;box-shadow:0 18px 45px rgba(15,23,42,.22),0 0 0 5px rgba(109,93,252,.055)!important;font-size:14px!important;font-weight:850!important;transition:transform .25s ease,box-shadow .25s ease!important}
+.nm-support-fab{min-width:215px!important;min-height:64px!important;padding:8px 16px!important;display:flex!important;align-items:center!important;gap:11px!important;border:1px solid rgba(109,93,252,.25)!important;border-radius:18px!important;background:linear-gradient(135deg,#111217,#292344)!important;color:#fff!important;box-shadow:0 18px 45px rgba(15,23,42,.22),0 0 0 5px rgba(109,93,252,.055)!important;font-size:14px!important;font-weight:850!important;transition:transform .25s ease,box-shadow .25s ease!important}
 .nm-support-fab:hover{transform:translateY(-4px) scale(1.025)!important;box-shadow:0 24px 55px rgba(15,23,42,.28),0 0 0 8px rgba(109,93,252,.08)!important}
-.nm-support-fab::before{content:'Keep NoMeta independent';display:block;margin-bottom:4px;color:#c9c2ff;font-size:9px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
-.nm-support-fab span{font-size:15px!important}
+.nm-support-fab__icon{display:grid!important;place-items:center!important;width:35px!important;height:35px!important;flex:0 0 35px!important;border-radius:11px!important;background:rgba(255,255,255,.09)!important;font-size:18px!important}
+.nm-support-fab__copy{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important;text-align:left!important}
+.nm-support-fab__copy strong{font-size:14px!important;line-height:1.1!important}
+.nm-support-fab__copy small{font-size:9px!important;line-height:1.1!important;color:#c9c2ff!important;font-weight:800!important;letter-spacing:.1em!important;text-transform:uppercase!important}
+.nm-support-fab__arrow{margin-left:auto!important;font-size:16px!important;opacity:.75!important}
 .nm-support-card{width:min(390px,calc(100vw - 32px))!important;padding:27px!important;border-radius:24px!important;box-shadow:0 30px 85px rgba(15,23,42,.25),0 0 0 1px rgba(109,93,252,.11)!important;background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface) 84%,#6d5dfc 16%))!important}
 .nm-support-card h3{font-size:27px!important;line-height:1.04!important;letter-spacing:-.045em!important;margin:8px 0 10px!important}
 .nm-support-card p{font-size:14px!important;line-height:1.58!important}
+.nm-support-reasons{display:grid!important;gap:8px!important;margin:16px 0!important;padding:14px!important;border-radius:15px!important;background:color-mix(in srgb,var(--surface) 82%,#6d5dfc 18%)!important;border:1px solid var(--border)!important}
+.nm-support-reasons span{font-size:12px!important;line-height:1.35!important;color:var(--text)!important;font-weight:700!important}
 .nm-support-card small{display:block!important;margin-top:12px!important;line-height:1.45!important;color:var(--muted)!important}
 .nm-support-button{min-height:52px!important;border-radius:14px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-weight:850!important;background:linear-gradient(135deg,#6d5dfc,#5145d7)!important;color:#fff!important;box-shadow:0 12px 28px rgba(109,93,252,.27)!important;transition:transform .2s ease,box-shadow .2s ease!important}
 .nm-support-button:hover{transform:translateY(-2px)!important;box-shadow:0 16px 34px rgba(109,93,252,.34)!important}
@@ -95,8 +97,9 @@
  .nm-section{padding:62px 0!important}
  .nm-steps{grid-template-columns:1fr!important}
  .nm-steps .nm-step{min-height:175px!important}
- .nm-support-fab{min-width:168px!important;min-height:54px!important;border-radius:16px!important;padding:0 16px!important}
- .nm-support-fab span{font-size:13px!important}
- .nm-support-fab::before{font-size:8px!important}
+ .nm-support-fab{min-width:170px!important;min-height:56px!important;border-radius:16px!important;padding:8px 13px!important}
+ .nm-support-fab__icon{width:30px!important;height:30px!important;flex-basis:30px!important;font-size:16px!important}
+ .nm-support-fab__copy strong{font-size:12px!important}
+ .nm-support-fab__copy small{font-size:8px!important}
 }
 @media(prefers-reduced-motion:reduce){.nm-scanner-visual__choose,.nm-support-fab,.nm-support-button{transition:none!important}}
