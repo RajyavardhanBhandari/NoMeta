@@ -2,7 +2,7 @@ import type { SVGProps } from 'react';
 
 type IconName = 'arrow' | 'check' | 'shield' | 'scan' | 'download' | 'lock' | 'chevron' | 'spark' | 'upload' | 'info' | 'alert' | 'plus' | 'location' | 'camera' | 'clock' | 'user' | 'settings';
 
-export function Icon({ name, size = 20, ...props }: SVGProps<SVGSVGElement> & { name: IconName | string; size?: number }) {
+export function Icon({ name, size = 20, ...props }: SVGProps<SVGSVGElement> & { name: IconName; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, 'aria-hidden': true, ...props };
   const paths = {
     arrow: <><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></>,
@@ -23,5 +23,5 @@ export function Icon({ name, size = 20, ...props }: SVGProps<SVGSVGElement> & { 
     user: <><circle cx="12" cy="8" r="3"/><path d="M5 21a7 7 0 0 1 14 0"/></>,
     settings: <><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M4.9 4.9 7 7"/><path d="m17 7 2.1-2.1"/><path d="m17 17 2.1 2.1"/><path d="M7 17 4.9 19.1"/></>,
   };
-  return <svg {...common}>{paths[name as IconName]}</svg>;
+  return <svg {...common}>{paths[name]}</svg>;
 }
