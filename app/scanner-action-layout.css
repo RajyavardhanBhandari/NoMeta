@@ -1,76 +1,189 @@
-/* Scanner result actions: keep primary actions in the hero action area instead of extending the tool vertically. */
+/* Scanner stays inside the original hero footprint after upload. Never extend page height. */
+.nm-home-tool{
+  position:relative!important;
+  height:520px!important;
+  min-height:520px!important;
+  max-height:520px!important;
+  overflow:visible!important;
+}
+
+/* The visual and the result workspace occupy the same hero slot. */
+.nm-home-tool .nm-scanner-hero{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:520px!important;
+  min-height:520px!important;
+  max-height:520px!important;
+  z-index:1!important;
+}
+.nm-home-tool .nm-scanner-visual{
+  height:520px!important;
+  min-height:520px!important;
+  max-height:520px!important;
+}
+
+/* Post-upload states replace the scanner visual instead of being added below it. */
+.nm-home-tool>.nm-scanner-workspace{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:520px!important;
+  max-height:520px!important;
+  margin:0!important;
+  padding:0!important;
+  z-index:10!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-width:thin!important;
+  background:var(--surface,#fff)!important;
+  border:1px solid var(--border,#e6e8ec)!important;
+  border-radius:25px!important;
+  box-shadow:0 24px 70px rgba(15,23,42,.12)!important;
+}
+
+/* Compact the result workspace so the normal desktop viewport remains calm. */
+.nm-home-tool .nm-scanner-workspace .nm-scanner-loading{
+  margin:0!important;
+  padding:20px!important;
+  border:0!important;
+  border-bottom:1px solid var(--border,#e6e8ec)!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-file-grid{margin:12px 16px!important;gap:8px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-file{padding:9px!important;gap:8px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-file__thumb{width:42px!important;height:42px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-actions{margin:12px 16px 16px!important;justify-content:flex-start!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-result-head{margin:0 16px 12px!important;padding-top:16px!important;gap:14px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-preview{width:62px!important;height:62px!important;border-radius:15px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-result-head h2{font-size:25px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-result-head p{font-size:12px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-panel{margin:0 16px!important;padding:14px!important;border-radius:18px!important;box-shadow:none!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-panel h3{font-size:17px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category-grid{gap:7px!important;margin-top:11px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category{grid-template-columns:34px minmax(0,1fr) 16px!important;gap:8px!important;padding:9px!important;border-radius:12px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category__icon{width:34px!important;height:34px!important;border-radius:10px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category strong{font-size:12px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category small{font-size:9px!important;margin-top:2px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category__detail{gap:4px!important}
+.nm-home-tool .nm-scanner-workspace .nm-scanner-category__detail em{padding:4px 6px!important;font-size:9px!important}
+
+/* Actions stay in normal flow and are always visible/clickable. */
 .nm-home-tool .nm-scanner-clean-card{
   display:flex!important;
   flex-direction:column!important;
   align-items:flex-start!important;
-  gap:22px!important;
-  position:static!important;
+  gap:10px!important;
+  margin:12px 16px 0!important;
+  padding:16px!important;
+  border-radius:18px!important;
 }
-.nm-home-tool .nm-scanner-clean-card>div{
-  width:100%!important;
-}
+.nm-home-tool .nm-scanner-clean-card>div{width:100%!important}
+.nm-home-tool .nm-scanner-clean-card h3{font-size:17px!important}
+.nm-home-tool .nm-scanner-remove-list{margin-top:8px!important;gap:6px!important}
+.nm-home-tool .nm-scanner-remove-list span{padding:6px 8px!important;font-size:9px!important}
 .nm-home-tool .nm-scanner-clean-card>button{
-  position:absolute!important;
-  z-index:20!important;
-  left:calc(-100% - 52px)!important;
-  top:300px!important;
-  width:calc(100% - 10px)!important;
-  max-width:410px!important;
-  min-height:58px!important;
-  padding:15px 28px!important;
-  font-size:16px!important;
-  font-weight:850!important;
-  border-radius:15px!important;
+  position:static!important;
+  align-self:flex-start!important;
+  width:auto!important;
+  min-width:230px!important;
+  min-height:52px!important;
+  padding:13px 22px!important;
   margin:0!important;
+  font-size:15px!important;
+  font-weight:850!important;
   white-space:nowrap!important;
 }
-.nm-home-tool .nm-scanner-clean-card>button:hover{
-  transform:translateY(-2px)!important;
-}
+
 .nm-home-tool .nm-scanner-success{
   display:flex!important;
   flex-wrap:wrap!important;
   align-items:flex-start!important;
-  gap:20px!important;
+  gap:10px!important;
+  margin:10px 16px 16px!important;
+  padding:14px!important;
+  border-radius:18px!important;
 }
-.nm-home-tool .nm-scanner-success>div:nth-child(2){
-  flex:1 1 320px!important;
-  min-width:0!important;
-}
+.nm-home-tool .nm-scanner-success__mark{width:38px!important;height:38px!important;font-size:19px!important}
+.nm-home-tool .nm-scanner-success>div:nth-child(2){flex:1 1 220px!important;min-width:0!important}
+.nm-home-tool .nm-scanner-success h3{font-size:16px!important}
+.nm-home-tool .nm-scanner-success p{font-size:11px!important}
 .nm-home-tool .nm-scanner-success>button{
-  position:absolute!important;
-  z-index:20!important;
-  left:calc(-100% - 52px)!important;
-  top:300px!important;
-  width:calc(100% - 10px)!important;
-  max-width:410px!important;
-  min-height:58px!important;
-  padding:15px 28px!important;
-  font-size:16px!important;
-  font-weight:850!important;
-  border-radius:15px!important;
+  position:static!important;
+  align-self:flex-start!important;
+  width:auto!important;
+  min-width:230px!important;
+  min-height:52px!important;
+  padding:13px 22px!important;
   margin:0!important;
+  font-size:15px!important;
+  font-weight:850!important;
   white-space:nowrap!important;
 }
-.nm-home-tool .nm-scanner-success>button:hover{
-  transform:translateY(-2px)!important;
+
+/* Error/retry controls never escape the hero slot. */
+.nm-home-tool .nm-scanner-error,
+.nm-home-tool .nm-scanner-warning{margin:8px 16px!important}
+.nm-home-tool .nm-scanner-bottom{margin:10px 16px 16px!important}
+
+/* Light and dark mode: preserve contrast for every scanner surface and control. */
+:root[data-theme="dark"] .nm-home-tool>.nm-scanner-workspace{
+  background:#0f1319!important;
+  border-color:#29313d!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.36)!important;
 }
-@media(max-width:900px){
-  .nm-home-tool .nm-scanner-clean-card>button,
-  .nm-home-tool .nm-scanner-success>button{
-    position:static!important;
-    width:auto!important;
-    max-width:none!important;
-    min-width:240px!important;
-    margin-top:16px!important;
-  }
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-loading,
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-panel,
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-file{
+  background:#151a22!important;
+  border-color:#2b3441!important;
+  color:#f5f7fb!important;
+}
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-category{
+  background:#171d26!important;
+  border-color:#303947!important;
+  color:#f5f7fb!important;
+}
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-category--sensitive{
+  background:#211d17!important;
+}
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-count,
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-category__detail em{
+  background:#232a34!important;
+  color:#cbd2dc!important;
+}
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-file small,
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-category small,
+:root[data-theme="dark"] .nm-home-tool .nm-scanner-workspace .nm-scanner-result-head p{
+  color:#9ca8b7!important;
+}
+
+@media(max-width:1000px){
+  .nm-home-tool{height:500px!important;min-height:500px!important;max-height:500px!important}
+  .nm-home-tool .nm-scanner-hero,
+  .nm-home-tool .nm-scanner-visual{height:500px!important;min-height:500px!important;max-height:500px!important}
+  .nm-home-tool>.nm-scanner-workspace{height:500px!important;max-height:500px!important}
 }
 @media(max-width:600px){
+  .nm-home-tool{height:385px!important;min-height:385px!important;max-height:385px!important}
+  .nm-home-tool .nm-scanner-hero,
+  .nm-home-tool .nm-scanner-visual{height:385px!important;min-height:385px!important;max-height:385px!important}
+  .nm-home-tool>.nm-scanner-workspace{height:385px!important;max-height:385px!important;border-radius:21px!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-loading{padding:14px!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-loading h2{font-size:19px!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-file-grid{grid-template-columns:1fr!important;margin:8px 12px!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-actions{margin:8px 12px 12px!important;flex-direction:row!important;justify-content:stretch!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-actions .nm-button{flex:1 1 0!important;width:auto!important;min-width:0!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-result-head{margin:0 12px 8px!important;padding-top:12px!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-panel{margin:0 12px!important;padding:11px!important}
+  .nm-home-tool .nm-scanner-workspace .nm-scanner-category-grid{grid-template-columns:1fr!important}
+  .nm-home-tool .nm-scanner-clean-card{margin:8px 12px 0!important;padding:12px!important}
   .nm-home-tool .nm-scanner-clean-card>button,
-  .nm-home-tool .nm-scanner-success>button{
-    width:100%!important;
-    min-width:0!important;
-    min-height:58px!important;
-    font-size:16px!important;
-  }
+  .nm-home-tool .nm-scanner-success>button{width:100%!important;min-width:0!important;min-height:50px!important}
+  .nm-home-tool .nm-scanner-success{margin:8px 12px 12px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .nm-home-tool .nm-scanner-workspace *{scroll-behavior:auto!important}
 }
