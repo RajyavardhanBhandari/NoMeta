@@ -78,6 +78,10 @@ export function PricingExperience() {
         body: JSON.stringify({ product: selected }),
       });
       const data = await response.json();
+      if (response.status === 401) {
+        window.location.href = `/auth/sign-in?next=${encodeURIComponent('/pricing')}`;
+        return;
+      }
       if (!response.ok || !data.configured || !data.orderId || !data.keyId) {
         throw new Error(data?.error || 'PAYMENT_NOT_CONFIGURED');
       }
