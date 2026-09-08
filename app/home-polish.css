@@ -40,11 +40,11 @@
 .nm-home-tool>.nm-scanner-workspace{display:block!important}
 .nm-home-tool .nm-scanner-workspace{max-width:none!important;margin-inline:0!important}
 
-/* Keep the first action visible with the content it acts on. */
-.nm-home-tool .nm-scanner-clean-card{align-items:flex-start!important;gap:24px!important}
-.nm-home-tool .nm-scanner-clean-card>button{align-self:flex-start!important;margin-top:2px!important;flex:0 0 auto!important}
-.nm-home-tool .nm-scanner-success{align-items:center!important;gap:22px!important}
-.nm-home-tool .nm-scanner-success>button{align-self:center!important;flex:0 0 auto!important;white-space:nowrap!important}
+/* Keep scanner actions aligned with the content they control. */
+.nm-home-tool .nm-scanner-clean-card{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;gap:24px!important}
+.nm-home-tool .nm-scanner-clean-card>button{align-self:start!important;justify-self:end!important;margin:0!important;flex:0 0 auto!important;white-space:nowrap!important}
+.nm-home-tool .nm-scanner-success{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:start!important;gap:22px!important}
+.nm-home-tool .nm-scanner-success>button{align-self:start!important;justify-self:end!important;margin:0!important;flex:0 0 auto!important;white-space:nowrap!important}
 .nm-home-tool .nm-scanner-actions{position:relative!important;z-index:2!important}
 
 /* Stronger, more editorial section rhythm. */
@@ -108,8 +108,9 @@
  .nm-support-fab__icon{width:30px!important;height:30px!important;flex-basis:30px!important;font-size:16px!important}
  .nm-support-fab__copy strong{font-size:12px!important}
  .nm-support-fab__copy small{font-size:8px!important}
- .nm-home-tool .nm-scanner-clean-card{gap:14px!important}
- .nm-home-tool .nm-scanner-success{gap:14px!important}
- .nm-home-tool .nm-scanner-clean-card>button,.nm-home-tool .nm-scanner-success>button{width:100%!important}
+ .nm-home-tool .nm-scanner-clean-card{grid-template-columns:1fr!important;gap:14px!important}
+ .nm-home-tool .nm-scanner-clean-card>button{justify-self:stretch!important;width:100%!important}
+ .nm-home-tool .nm-scanner-success{grid-template-columns:auto minmax(0,1fr)!important;gap:14px!important}
+ .nm-home-tool .nm-scanner-success>button{grid-column:1/-1!important;justify-self:stretch!important;width:100%!important}
 }
 @media(prefers-reduced-motion:reduce){.nm-scanner-visual__choose,.nm-support-fab,.nm-support-button{transition:none!important}}
