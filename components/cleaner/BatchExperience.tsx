@@ -3,8 +3,8 @@
 import { useMemo, useRef, useState } from 'react';
 import type { UploadItem } from '../../types/upload';
 import type { MetadataResult } from '../../types/metadata';
-import { scanImage } from '../../lib/metadata/scanner';
 import { cleanImage, verifyCleanedImage, type CleaningMode } from '../../lib/metadata/cleaner';
+import { scanImage } from '../../lib/metadata/scanner';
 import { createLocalZip } from '../../lib/uploads/zip';
 import { validateImageFile, formatFileSize } from '../../lib/uploads/validate';
 import { Button } from '../ui/Button';
@@ -13,12 +13,13 @@ import { Icon } from '../ui/Icon';
 export type BatchStage = 'queued' | 'scanning' | 'scanned' | 'cleaning' | 'awaiting_entitlement' | 'verified' | 'error';
 type BatchItem = UploadItem & { stage: BatchStage; result?: MetadataResult; cleanedBlob?: Blob; downloadUrl?: string; cleanedMode?: CleaningMode; error?: string };
 const MAX_FILES = 25;
+const CLEANING_MODE: CleaningMode = 'maximum';
 
 function outputName(name: string) { const dot = name.lastIndexOf('.'); return `cleaned-${dot > 0 ? name.slice(0, dot) : name}${dot > 0 ? name.slice(dot) : ''}`; }
 function makeId() { return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
 
-async function recordSuccessfulCleaning(item: BatchItem, mode: CleaningMode) {
-  const response = await fetch('/api/cleaning/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ referenceId: item.id, mode, format: item.file.type, fileSize: item.file.size }) });
+async function recordSuccessfulCleaning(item: BatchItem) {
+  const response = await fetch('/api/cleaning/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ referenceId: item.id, mode: CLEANING_MODE, format: item.file.type, fileSize: item.file.size }) });
   let data: { error?: string } = {}; try { data = await response.json(); } catch {}
   if (!response.ok) {
     if (response.status === 401) throw new Error('Sign in to unlock your download. Your cleaned image is still on this device.');
@@ -31,7 +32,6 @@ function stageProgress(stage: BatchStage) { if (stage === 'queued') return 0; if
 
 export function BatchExperience({ files, onReset }: { files: UploadItem[]; onReset?: () => void }) {
   const [items, setItems] = useState<BatchItem[]>(() => files.map(f => ({ ...f, stage: 'queued' })));
-  const [mode, setMode] = useState<CleaningMode>('standard');
   const [busy, setBusy] = useState(false);
   const [zipBusy, setZipBusy] = useState(false);
   const [addError, setAddError] = useState('');
@@ -80,8 +80,7 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
   };
 
   const confirmEntitlement = async (item: BatchItem) => {
-    const entitlementMode = item.cleanedMode || mode;
-    try { await recordSuccessfulCleaning(item, entitlementMode); update(item.id, { stage: 'verified', error: undefined }); return true; }
+    try { await recordSuccessfulCleaning(item); update(item.id, { stage: 'verified', error: undefined }); return true; }
     catch (e) { update(item.id, { stage: 'awaiting_entitlement', error: e instanceof Error ? e.message : 'Unable to confirm your cleaning allowance.' }); return false; }
   };
 
@@ -107,12 +106,12 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
         if (!item.result || abortRef.current.signal.aborted) continue;
         update(item.id, { stage: 'cleaning', error: undefined });
         try {
-          const blob = await cleanImage(item.file, mode);
+          const blob = await cleanImage(item.file, CLEANING_MODE);
           const check = await verifyCleanedImage(blob);
           if (!check.verified) throw new Error(`${check.remainingMetadata} supported metadata item(s) remain after cleaning.`);
           const url = URL.createObjectURL(blob);
           urlsRef.current.push(url);
-          const prepared: BatchItem = { ...item, stage: 'awaiting_entitlement', cleanedBlob: blob, downloadUrl: url, cleanedMode: mode, error: undefined };
+          const prepared: BatchItem = { ...item, stage: 'awaiting_entitlement', cleanedBlob: blob, downloadUrl: url, cleanedMode: CLEANING_MODE, error: undefined };
           update(item.id, prepared);
           await confirmEntitlement(prepared);
         } catch (e) { update(item.id, { stage: 'error', error: e instanceof Error ? e.message : 'Cleaning failed.' }); }
@@ -165,10 +164,7 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
 
     <div className="nm-batch__summary"><span><strong>{items.length}</strong> selected</span><span><strong>{scanned}</strong> scanned</span><span><strong>{completed}</strong> ready</span><span><strong>{metadataCount}</strong> metadata found</span></div>
 
-    <div className="nm-batch__mode"><span>Choose protection</span><div role="radiogroup" aria-label="Cleaning mode">
-      <button type="button" onClick={() => setMode('standard')} className={mode === 'standard' ? 'is-selected' : ''} disabled={busy} aria-checked={mode === 'standard'} role="radio"><strong>Standard Clean</strong><small>Remove privacy-sensitive metadata while keeping the image pixels intact.</small></button>
-      <button type="button" onClick={() => setMode('maximum')} className={mode === 'maximum' ? 'is-selected' : ''} disabled={busy} aria-checked={mode === 'maximum'} role="radio"><strong>Maximum Privacy</strong><small>Use the most aggressive supported metadata removal in this version.</small></button>
-    </div></div>
+    <div className="nm-batch__protection"><Icon name="shield" /><div><strong>Maximum Privacy</strong><span>NoMeta automatically uses the strongest supported metadata removal. No protection settings to configure.</span></div><span className="nm-badge nm-badge--success"><span className="nm-badge__dot" />Best protection</span></div>
 
     {addError ? <div className="nm-batch__notice" role="alert"><Icon name="alert" /><span>{addError}</span></div> : null}
     <div className="nm-batch__list">{items.map((item, index) => <article className="nm-batch-item" key={item.id}>
@@ -187,4 +183,4 @@ export function BatchExperience({ files, onReset }: { files: UploadItem[]; onRes
   </section>;
 }
 
-function label(stage: BatchStage, n: number, total: number) { if (stage === 'queued') return 'Ready'; if (stage === 'scanning') return `Scanning ${n}/${total}`; if (stage === 'scanned') return 'Scanned'; if (stage === 'cleaning') return 'Cleaning'; if (stage === 'awaiting_entitlement') return 'Confirming'; if (stage === 'verified') return 'Ready'; return 'Needs attention'; }
+function label(stage: BatchStage, n: number, total: number) { if (stage === 'queued') return 'Ready'; if (stage === 'scanning') return `Scanning ${n}/${total}`; if (stage === 'scanned') return 'Scanned'; if (stage === 'cleaning') return 'Cleaning'; if (stage === 'awaiting_entitlement') return 'Confirming'; if (stage === 'verified') return '✓ Ready'; return 'Needs attention'; }
