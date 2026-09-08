@@ -116,35 +116,35 @@ export function PrivacyScannerExperience() {
 
   return <>
     <section className={`nm-scanner-hero nm-scanner-hero--${visualStage}`} aria-label="NoMeta privacy scanner">
-      <div className="nm-scanner-visual" aria-hidden="true">
+      <div className="nm-scanner-visual">
         <div className="nm-scanner-visual__ambient" />
         <div className="nm-scanner-visual__ring nm-scanner-visual__ring--outer" />
         <div className="nm-scanner-visual__ring nm-scanner-visual__ring--inner" />
         <div className="nm-scanner-visual__scanner">
           <div className="nm-scanner-visual__topline"><span>NOMETA / SCANNER</span><span>{visualStage === 'scanning' ? 'ANALYZING' : visualStage === 'cleaning' ? 'SANITIZING' : visualStage === 'verified' ? 'VERIFIED' : visualStage === 'scanned' ? 'METADATA FOUND' : 'READY'}</span></div>
           <div className="nm-scanner-visual__viewport">
-            {hasBrowserPreview ? <img className="nm-scanner-visual__image" src={primary!.previewUrl} alt="Selected photo preview" /> : <div className="nm-scanner-visual__empty"><Icon name="scan" /><strong>{primary ? 'HEIC / HEIF' : 'YOUR PHOTO'}</strong><span>{primary ? 'Ready for local inspection' : 'Choose a photo to begin'}</span></div>}
+            {hasBrowserPreview ? <img className="nm-scanner-visual__image" src={primary!.previewUrl} alt="Selected photo preview" /> : <div className="nm-scanner-visual__empty"><Icon name="scan" /><strong>{primary ? 'HEIC / HEIF' : 'YOUR PHOTO'}</strong><span>{primary ? 'Ready for local inspection' : 'Drop a photo or choose one below'}</span>{!primary ? <button type="button" className="nm-scanner-visual__choose" onClick={() => inputRef.current?.click()}>Choose a photo</button> : null}</div>}
             <span className="nm-scanner-visual__scanline" />
             <span className="nm-scanner-visual__corner nm-scanner-visual__corner--tl" /><span className="nm-scanner-visual__corner nm-scanner-visual__corner--tr" /><span className="nm-scanner-visual__corner nm-scanner-visual__corner--bl" /><span className="nm-scanner-visual__corner nm-scanner-visual__corner--br" />
             <span className="nm-scanner-visual__beam" />
             <span className="nm-scanner-visual__target nm-scanner-visual__target--one">GPS</span><span className="nm-scanner-visual__target nm-scanner-visual__target--two">DEVICE</span><span className="nm-scanner-visual__target nm-scanner-visual__target--three">TIME</span><span className="nm-scanner-visual__target nm-scanner-visual__target--four">AUTHOR</span>
             <span className="nm-scanner-visual__center-dot" />
           </div>
-          <div className="nm-scanner-visual__bottomline"><span>LOCAL PROCESSING</span><span>NO UPLOAD</span></div>
+          <div className="nm-scanner-visual__bottomline"><span>LOCAL PROCESSING</span><span>NO UPLOAD</span><span>MAXIMUM PRIVACY</span></div>
         </div>
       </div>
     </section>
 
-    {!scanned.length || ready.length ? <section className="nm-scanner-workspace" aria-live="polite">
+    <input ref={inputRef} className="nm-visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple onChange={e => e.target.files && addFiles(e.target.files)} />
+
+    {items.length > 0 && (!scanned.length || ready.length) ? <section className="nm-scanner-workspace" aria-live="polite">
       <div className="nm-scanner-loading"><div className={`nm-scanner-spinner ${busy ? 'is-active' : ''}`} /><div><span className="nm-eyebrow">Privacy scan</span><h2>{busy ? 'Checking what your photo reveals…' : 'Ready to scan'}</h2><p>{items.length} photo{items.length === 1 ? '' : 's'} selected · nothing is uploaded.</p></div></div>
       <div className="nm-scanner-file-grid">{items.map(item => <article className="nm-scanner-file" key={item.id}><div className="nm-scanner-file__thumb">{item.file.type.startsWith('image/') && !/\.hei[cf]$/i.test(item.file.name) ? <img src={item.previewUrl} alt="" /> : <span>HEIC</span>}</div><div><strong>{item.file.name}</strong><small>{formatFileSize(item.file.size)}</small></div><span className={`nm-scanner-file__status nm-scanner-file__status--${item.stage}`}>{item.stage === 'scanning' ? 'Scanning…' : item.stage === 'error' ? 'Needs attention' : 'Ready'}</span><button type="button" aria-label={`Remove ${item.file.name}`} onClick={() => remove(item.id)}>×</button></article>)}</div>
       {error ? <div className="nm-scanner-error" role="alert">{error}</div> : null}
       <div className="nm-scanner-actions"><Button variant="secondary" onClick={() => inputRef.current?.click()} icon="plus" disabled={busy}>Add photos</Button><Button variant="primary" onClick={scanAll} disabled={busy || !items.length}>{busy ? 'Scanning…' : 'Scan for hidden information'}</Button></div>
-      <input ref={inputRef} className="nm-visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple onChange={e => e.target.files && addFiles(e.target.files)} />
     </section> : null}
 
     {scanned.length && !ready.length ? <section className="nm-scanner-workspace" aria-live="polite">
-      <input ref={inputRef} className="nm-visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple onChange={e => e.target.files && addFiles(e.target.files)} />
       <div className="nm-scanner-result-head"><div className="nm-scanner-preview">{primary && hasBrowserPreview ? <img src={primary.previewUrl} alt="" /> : <span>HEIC</span>}</div><div><span className="nm-eyebrow">Your photo</span><h2>Privacy exposure</h2><div className="nm-scanner-risk"><span className={`nm-scanner-risk__dot nm-scanner-risk__dot--${riskLabel(primaryResult).toLowerCase()}`} />{riskLabel(primaryResult)}</div><p>{items.length > 1 ? `${items.length} photos scanned · ` : ''}{totalEntries} pieces of embedded information found.</p></div></div>
       <div className="nm-scanner-panel"><div className="nm-scanner-panel__head"><div><span className="nm-eyebrow">Detected</span><h3>What your photo carries</h3></div><span className="nm-scanner-count">{totalSensitive} privacy-sensitive</span></div><div className="nm-scanner-category-grid">{categoriesForDisplay.map(category => { const meta = categoryMeta[category]; return <button type="button" className={`nm-scanner-category nm-scanner-category--${meta.group}`} key={category} onClick={() => setExpanded(expanded === category ? null : category)}><span className="nm-scanner-category__icon"><Icon name={meta.icon} /></span><span><strong>{meta.title}</strong><small>Found · {meta.found}</small></span><span className="nm-scanner-category__chevron">{expanded === category ? '−' : '+'}</span>{expanded === category ? <span className="nm-scanner-category__detail">{primaryResult?.entries.filter(e => e.category === category).slice(0, 4).map(e => <em key={e.id}>{e.label}</em>)}</span> : null}</button>; })}</div>{primaryResult?.warnings.length ? <div className="nm-scanner-warning">{primaryResult.warnings[0]}</div> : null}</div>
       <div className="nm-scanner-clean-card"><div><span className="nm-eyebrow">Maximum privacy</span><h3>NoMeta will remove</h3><div className="nm-scanner-remove-list">{categoriesForDisplay.map(category => <span key={category}><b>✓</b>{categoryMeta[category].remove}</span>)}</div></div><Button variant="primary" onClick={cleanAll} disabled={busy}>{busy ? 'Cleaning & verifying…' : 'Clean & verify'}</Button></div>
