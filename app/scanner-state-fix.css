@@ -1,0 +1,38 @@
+/* Scanner state polish. This file intentionally overrides the earlier visual layer. */
+
+/* IMPORTANT: no loading spinner or moving orbit while nothing is being processed. */
+.nm-scanner-loading .nm-scanner-spinner{display:none!important}
+.nm-scanner-loading:before{content:"✓";width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--nm-border,#dfe3ea);border-radius:50%;background:var(--nm-card,#fff);color:#667085;font-weight:800;flex:0 0 auto}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-loading .nm-scanner-spinner{display:block!important}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-loading:before{display:none!important}
+
+/* The right side is a scanner instrument, not another text block. */
+.nm-scanner-hero{grid-template-columns:minmax(0,.84fr) minmax(430px,1.16fr)!important;gap:34px!important;min-height:590px!important}
+.nm-scanner-visual{min-height:470px!important}
+.nm-scanner-visual__frame{width:min(430px,86vw)!important;border-radius:32px!important;transform:rotateY(-5deg) rotateX(2deg)!important}
+.nm-scanner-visual__photo{height:335px!important;background:radial-gradient(circle at 72% 26%,rgba(126,112,255,.22),transparent 22%),linear-gradient(145deg,#1b2330,#090d14)!important}
+.nm-scanner-visual__photo:before{inset:25px!important;border-color:rgba(145,178,255,.16)!important;background:linear-gradient(90deg,transparent 49.6%,rgba(145,178,255,.07) 50%,transparent 50.4%),linear-gradient(0deg,transparent 49.6%,rgba(145,178,255,.07) 50%,transparent 50.4%)!important}
+.nm-scanner-visual__scanline{left:25px!important;right:25px!important}
+
+/* Resting scanner: subtle breathing only. */
+.nm-scanner-visual__orbit{animation:none!important;opacity:.45!important}
+.nm-scanner-visual__scanline{animation:none!important;opacity:.2!important}
+
+/* Real scan: everything comes alive together. */
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__frame{animation:nmScannerActive 1.8s ease-in-out infinite!important;box-shadow:0 38px 110px rgba(15,23,42,.34),0 0 120px rgba(99,102,241,.34)!important}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__scanline{animation:nmScannerSweep 1.05s cubic-bezier(.55,.05,.45,.95) infinite!important;opacity:1!important}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__orbit--one{animation:nmScannerOrbit 5.5s linear infinite!important;opacity:1!important}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__orbit--two{animation:nmScannerOrbitReverse 3.6s linear infinite!important;opacity:1!important}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__photo i{animation:nmScannerParticle .9s ease-in-out infinite!important;opacity:1!important}
+body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__chips span{animation:nmChipPulse .9s ease-in-out infinite!important;opacity:1!important}
+
+/* Scanned/cleaning/verified states can still be driven by the classes if present. */
+.nm-scanner-hero--cleaning .nm-scanner-visual__scanline{animation:nmScannerCleanSweep .9s ease-in-out infinite!important;opacity:1!important;background:linear-gradient(90deg,transparent,#63d79a 18%,#fff 50%,#63d9cf 82%,transparent)!important;box-shadow:0 0 20px #63d79a,0 0 45px rgba(99,217,207,.55)!important}
+.nm-scanner-hero--verified .nm-scanner-visual__orbit{animation:none!important;opacity:.8!important}.nm-scanner-hero--verified .nm-scanner-visual__scanline{animation:nmVerifiedBeam 1.7s ease-in-out infinite!important;opacity:1!important}
+
+/* Hide the decorative status if the component has not supplied one; don't fake a process state. */
+.nm-scanner-visual__status{display:none}
+
+@media(max-width:900px){.nm-scanner-hero{grid-template-columns:1fr!important;gap:4px!important;min-height:auto!important}.nm-scanner-visual{min-height:430px!important;margin-top:0!important}.nm-scanner-visual__frame{width:min(410px,88vw)!important}.nm-scanner-visual__photo{height:300px!important}}
+@media(max-width:520px){.nm-scanner-visual{min-height:370px!important}.nm-scanner-visual__frame{width:90vw!important}.nm-scanner-visual__photo{height:270px!important}}
+@media(prefers-reduced-motion:reduce){body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__frame,body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__orbit,body:has(.nm-scanner-file__status--scanning) .nm-scanner-visual__scanline{animation:none!important}}
