@@ -9,12 +9,17 @@ function jpegClean(input: ArrayBuffer): Uint8Array {
   let p = 2;
   while (p < src.length) {
     if (src[p] !== 0xff) { out.push(src[p++]); continue; }
-    let markerStart = p;
     while (p < src.length && src[p] === 0xff) p++;
     if (p >= src.length) break;
     const marker = src[p++];
     if (marker === 0xd9) { out.push(0xff, marker); break; }
-    if (marker === 0xda) { out.push(0xff, marker); out.push(src[p], src[p+1]); p += 2; out.push(...src.subarray(p)); break; }
+    if (marker === 0xda) {
+      if (p + 2 > src.length) throw new Error('Malformed JPEG scan header.');
+      out.push(0xff, marker, src[p], src[p + 1]);
+      p += 2;
+      out.push(...src.subarray(p));
+      break;
+    }
     if (marker >= 0xd0 && marker <= 0xd7) { out.push(0xff, marker); continue; }
     if (p + 2 > src.length) throw new Error('Malformed JPEG segment.');
     const len = (src[p] << 8) | src[p + 1];
@@ -22,29 +27,30 @@ function jpegClean(input: ArrayBuffer): Uint8Array {
     const payload = src.subarray(p + 2, p + len);
     const text = decoder.decode(payload);
     const isApp1 = marker === 0xe1;
+    const isApp11 = marker === 0xeb; // JPEG APP11 is the C2PA/JUMBF carrier.
     const isApp13 = marker === 0xed;
     const isComment = marker === 0xfe;
-    const isPrivacyApp2 = marker === 0xe2 && /http:\/\/ns\.adobe\.com\/xap|xmp/i.test(text);
-    const remove = isApp1 || isApp13 || isComment || isPrivacyApp2;
+    const isPrivacyApp2 = marker === 0xe2 && /http:\/\/ns\.adobe\.com\/xap|xmp|iptc|photoshop/i.test(text);
+    const remove = isApp1 || isApp11 || isApp13 || isComment || isPrivacyApp2;
     if (!remove) out.push(0xff, marker, (len >> 8) & 255, len & 255, ...payload);
-    p = p + len;
-    if (p === markerStart) throw new Error('JPEG parser stalled.');
+    p += len;
   }
   return new Uint8Array(out);
 }
 
 function pngClean(input: ArrayBuffer): Uint8Array {
   const src = new Uint8Array(input);
-  const signature = [137,80,78,71,13,10,26,10];
-  if (!signature.every((v,i)=>src[i]===v)) throw new Error('Invalid PNG file.');
+  const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+  if (src.length < 8 || !signature.every((v, i) => src[i] === v)) throw new Error('Invalid PNG file.');
   const out: number[] = [...signature];
   let p = 8;
-  const remove = new Set(['tEXt','zTXt','iTXt','eXIf']);
+  const remove = new Set(['tEXt', 'zTXt', 'iTXt', 'eXIf', 'caBX']); // caBX is the C2PA/JUMBF carrier.
+  const view = new DataView(src.buffer, src.byteOffset, src.byteLength);
   while (p + 12 <= src.length) {
-    const len = new DataView(src.buffer, src.byteOffset, src.byteLength).getUint32(p, false);
-    const type = String.fromCharCode(...src.subarray(p+4,p+8));
+    const len = view.getUint32(p, false);
+    const type = String.fromCharCode(...src.subarray(p + 4, p + 8));
     if (p + 12 + len > src.length) throw new Error('Malformed PNG chunk.');
-    if (!remove.has(type)) out.push(...src.subarray(p,p+12+len));
+    if (!remove.has(type)) out.push(...src.subarray(p, p + 12 + len));
     p += 12 + len;
     if (type === 'IEND') break;
   }
@@ -54,25 +60,27 @@ function pngClean(input: ArrayBuffer): Uint8Array {
 
 function webpClean(input: ArrayBuffer): Uint8Array {
   const src = new Uint8Array(input);
-  const header = String.fromCharCode(...src.subarray(0,4));
-  const form = String.fromCharCode(...src.subarray(8,12));
-  if (header !== 'RIFF' || form !== 'WEBP') throw new Error('Invalid WebP file.');
-  const out: number[] = [...src.subarray(0,12)];
+  const header = String.fromCharCode(...src.subarray(0, 4));
+  const form = String.fromCharCode(...src.subarray(8, 12));
+  if (src.length < 20 || header !== 'RIFF' || form !== 'WEBP') throw new Error('Invalid WebP file.');
+  const out: number[] = [...src.subarray(0, 12)];
   let p = 12;
+  const view = new DataView(src.buffer, src.byteOffset, src.byteLength);
   while (p + 8 <= src.length) {
-    const type = String.fromCharCode(...src.subarray(p,p+4));
-    const size = new DataView(src.buffer, src.byteOffset, src.byteLength).getUint32(p+4,true);
+    const type = String.fromCharCode(...src.subarray(p, p + 4));
+    const size = view.getUint32(p + 4, true);
     const total = 8 + size + (size % 2);
     if (p + total > src.length) throw new Error('Malformed WebP chunk.');
-    if (type !== 'EXIF' && type !== 'XMP ') out.push(...src.subarray(p,p+total));
+    if (type !== 'EXIF' && type !== 'XMP ' && type !== 'C2PA') out.push(...src.subarray(p, p + total));
     p += total;
   }
   return new Uint8Array(out);
 }
 
 export async function cleanImage(file: File, mode: CleaningMode): Promise<Blob> {
-  // Both modes use structural metadata removal in V1. Maximum Privacy is deliberately
-  // conservative: it removes known privacy-bearing metadata without re-encoding pixels.
+  // Both modes use the same structural privacy removal in V1. Maximum Privacy is
+  // the product default and removes EXIF, XMP/IPTC/comment carriers and C2PA/JUMBF
+  // containers without re-encoding the visible pixels.
   void mode;
   const buffer = await file.arrayBuffer();
   let bytes: Uint8Array;
@@ -80,8 +88,6 @@ export async function cleanImage(file: File, mode: CleaningMode): Promise<Blob> 
   else if (file.type === 'image/png') bytes = pngClean(buffer);
   else if (file.type === 'image/webp') bytes = webpClean(buffer);
   else throw new Error('Unsupported image format.');
-  // Copy into a standalone ArrayBuffer so BlobPart remains compatible with
-  // modern TypeScript's ArrayBufferLike typings (including SharedArrayBuffer).
   const blobBytes = new Uint8Array(bytes.byteLength);
   blobBytes.set(bytes);
   return new Blob([blobBytes.buffer], { type: file.type || 'application/octet-stream' });
