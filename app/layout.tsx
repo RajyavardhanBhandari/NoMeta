@@ -5,6 +5,7 @@ import './nometa-ux.css';
 import './workflow-polish.css';
 import { PageViewTracker } from '../components/analytics/PageViewTracker';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { Footer } from '../components/ui/Footer';
 import { BRAND } from '../lib/brand';
 
 export const metadata: Metadata = {
@@ -23,5 +24,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" suppressHydrationWarning><body><PageViewTracker /><ErrorBoundary>{children}</ErrorBoundary></body></html>;
+  return <html lang="en" suppressHydrationWarning><body><PageViewTracker /><ErrorBoundary>{children}</ErrorBoundary><Footer /></body></html>;
 }
