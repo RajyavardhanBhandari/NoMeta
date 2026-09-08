@@ -1,3 +1,5 @@
-import { Nav } from '../../components/ui/Nav';
-import { Icon } from '../../components/ui/Icon';
-export default function HowItWorks(){return <><Nav/><main className="nm-page"><div className="nm-container"><div className="nm-page__head"><span className="nm-eyebrow">How it works</span><h1>Make hidden photo data visible, then make it optional.</h1><p>NoMeta separates scanning from cleaning so you can understand what was found before you decide what to remove.</p></div><div className="nm-steps">{[['01','Upload','Pick a supported image from your device.'],['02','Scan','Inspect EXIF, XMP, IPTC and other supported fields.'],['03','Clean','Choose Standard Clean or Maximum Privacy.'],['04','Verify','Rescan the generated copy and download it.']].map(([n,t,d])=><div className="nm-step" key={n}><span className="nm-step__num">{n}</span><h3>{t}</h3><p>{d}</p></div>)}</div><div className="nm-card" style={{padding:28,marginTop:16}}><div style={{display:'flex',gap:12}}><Icon name="lock"/><div><strong>Local-first by design</strong><p className="nm-muted" style={{lineHeight:1.6}}>The core image-processing flow is designed to run in your browser. Account, usage and payment operations are separate server-side concerns.</p></div></div></div></div></main></>}
+import { redirect } from 'next/navigation';
+
+export default function HowItWorks(){
+  redirect('/#how-it-works');
+}
