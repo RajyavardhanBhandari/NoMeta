@@ -16,7 +16,7 @@ export interface MetadataResult {
   fileName: string;
   mimeType: string;
   size: number;
-  format: 'jpeg' | 'png' | 'webp';
+  format: 'jpeg' | 'png' | 'webp' | 'heic' | 'heif';
   entries: MetadataEntry[];
   counts: Record<MetadataCategory, number>;
   privacyScore: number;
