@@ -31,7 +31,7 @@ function categorize(key: string): MetadataCategory {
   if (/date|time|timestamp|created|modified|original/.test(k)) return 'time';
   if (/artist|author|creator|owner|copyright|byline|person/.test(k)) return 'identity';
   if (/software|application|processing|editor|hostcomputer/.test(k)) return 'software';
-  if (/xmp|iptc|history|documentid|instanceid|derived|source/.test(k)) return 'provenance';
+  if (/xmp|iptc|history|documentid|instanceid|derived|source|c2pa|jumbf|provenance/.test(k)) return 'provenance';
   if (/width|height|orientation|resolution|dpi|exposure|fnumber|iso|focal|flash|whitebalance|compression|bits|color/.test(k)) return 'technical';
   return 'other';
 }
@@ -126,6 +126,9 @@ function parseJpeg(buffer: ArrayBuffer) {
       const text = textDecoder.decode(new Uint8Array(buffer, p + 2, Math.min(len - 2, 4096)));
       if (/xmp|iptc|photoshop|http:\/\/ns\.adobe\.com/i.test(text)) out.push([marker === 0xed ? 'IPTC/Photoshop' : 'XMP', text.replace(/[\0\x01-\x08\x0b\x0c\x0e-\x1f]/g, ' ').slice(0, 1000)]);
     }
+    if (marker === 0xeb && len > 2) {
+      out.push(['C2PA/JUMBF', 'Content Credentials provenance data is embedded in a JPEG APP11 segment.']);
+    }
     p += len;
   }
   return out;
@@ -137,6 +140,7 @@ function parsePng(buffer: ArrayBuffer) {
     const len = d.getUint32(p, false); if (len > d.byteLength - p - 12) break;
     const type = textDecoder.decode(new Uint8Array(buffer, p + 4, 4));
     if (['tEXt', 'zTXt', 'iTXt', 'eXIf'].includes(type)) out.push([`PNG ${type}`, type === 'eXIf' ? 'Embedded EXIF metadata is present.' : textDecoder.decode(new Uint8Array(buffer, p + 8, Math.min(len, 1000)))]);
+    if (type === 'caBX') out.push(['C2PA/JUMBF', 'Content Credentials provenance data is embedded in a PNG caBX chunk.']);
     p += 12 + len; if (type === 'IEND') break;
   }
   return out;
@@ -149,14 +153,20 @@ function parseWebp(buffer: ArrayBuffer) {
     if (end < start) break;
     if (type === 'EXIF' && end > start) out.push(...parseTiff(d, start));
     if (type === 'XMP ' && end > start) out.push(['XMP', textDecoder.decode(new Uint8Array(buffer, start, end - start)).slice(0, 1000)]);
+    if (type === 'C2PA' && end > start) out.push(['C2PA/JUMBF', 'Content Credentials provenance data is embedded in a WebP C2PA chunk.']);
     p = start + size + (size % 2); if (p <= start) break;
   }
   return out;
 }
 
 function inferFormat(type: string, buffer: ArrayBuffer): 'jpeg' | 'png' | 'webp' {
-  if (type === 'image/jpeg') return 'jpeg'; if (type === 'image/png') return 'png'; if (type === 'image/webp') return 'webp';
-  const d = new Uint8Array(buffer); if (d[0] === 0xff && d[1] === 0xd8) return 'jpeg'; if (d[0] === 0x89 && d[1] === 0x50) return 'png'; if (d[0] === 0x52 && d[1] === 0x49 && d[8] === 0x57) return 'webp';
+  if (type === 'image/jpeg' || type === 'image/jpg') return 'jpeg';
+  if (type === 'image/png') return 'png';
+  if (type === 'image/webp') return 'webp';
+  const d = new Uint8Array(buffer);
+  if (d[0] === 0xff && d[1] === 0xd8) return 'jpeg';
+  if (d[0] === 0x89 && d[1] === 0x50) return 'png';
+  if (d[0] === 0x52 && d[1] === 0x49 && d[8] === 0x57) return 'webp';
   throw new Error('This file is not a supported JPEG, PNG or WebP image.');
 }
 
@@ -167,15 +177,19 @@ export async function scanImage(file: File): Promise<MetadataResult> {
   let raw: [string, string][] = [];
   try { raw = format === 'jpeg' ? parseJpeg(buffer) : format === 'png' ? parsePng(buffer) : parseWebp(buffer); } catch { throw new Error('NoMeta could not safely read this image. Please try another copy of the file.'); }
 
-  const entries: MetadataEntry[] = []; for (const [key, value] of raw) add(entries, key, value);
-  const counts = emptyCounts(); for (const e of entries) counts[e.category]++;
-  let exposure = 0; for (const e of entries) exposure += categoryDefaults[e.category];
+  const entries: MetadataEntry[] = [];
+  for (const [key, value] of raw) add(entries, key, value);
+  const counts = emptyCounts();
+  for (const e of entries) counts[e.category]++;
+  let exposure = 0;
+  for (const e of entries) exposure += categoryDefaults[e.category];
   const privacyScore = Math.max(0, Math.min(100, 100 - exposure));
   const riskLevel: RiskLevel = privacyScore < 55 ? 'high' : privacyScore < 80 ? 'medium' : privacyScore < 96 ? 'low' : 'info';
   const warnings: string[] = [];
   if (counts.location) warnings.push('Location metadata was found. It may reveal where the photo was taken.');
   if (counts.device) warnings.push('Device information was found.');
   if (counts.time) warnings.push('Capture or editing time information was found.');
+  if (counts.provenance) warnings.push('Provenance or embedded history metadata was found.');
   if (entries.length === 0) warnings.push('No supported metadata fields were detected in this file.');
   return { fileName: file.name, mimeType: file.type, size: file.size, format, entries, counts, privacyScore, riskLevel, scannedAt: Date.now(), warnings };
 }
