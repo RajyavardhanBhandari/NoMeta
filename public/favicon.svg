@@ -1,5 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
   <title id="title">NoMeta</title>
-  <rect width="64" height="64" rx="16" fill="#111111"/>
-  <path d="M16 48V16h9l14 19V16h9v32h-9L25 29v19z" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="bg" x1="8" y1="56" x2="56" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#18123f"/>
+      <stop offset="0.55" stop-color="#123a9d"/>
+      <stop offset="1" stop-color="#087fae"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="16" y1="48" x2="50" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8d78ff"/>
+      <stop offset="0.5" stop-color="#3d8dff"/>
+      <stop offset="1" stop-color="#52dcff"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <path fill="url(#mark)" d="M13 47V17h8.5c2.5 0 4.8 1.2 6.3 3.2L43 40V17h8v30h-8.5c-2.5 0-4.8-1.2-6.3-3.2L21 24v23h-8Z"/>
+  <path fill="#7be7ff" d="M51 7 52.5 11.5 57 13l-4.5 1.5L51 19l-1.5-4.5L45 13l4.5-1.5L51 7Z"/>
 </svg>
