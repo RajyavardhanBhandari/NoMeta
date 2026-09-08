@@ -49,7 +49,9 @@ export async function cleanImage(file: File, mode: CleaningMode): Promise<Blob> 
   if (type === 'image/heic' || type === 'image/heif' || /\.hei[cf]$/i.test(file.name)) {
     const converted = await heicToJpeg(file);
     const bytes = jpegClean(await converted.arrayBuffer());
-    return new Blob([bytes.buffer], { type: 'image/jpeg' });
+    const blobBytes = new Uint8Array(bytes.byteLength);
+    blobBytes.set(bytes);
+    return new Blob([blobBytes.buffer], { type: 'image/jpeg' });
   }
   const buffer = await file.arrayBuffer(); let bytes: Uint8Array;
   if (type === 'image/jpeg' || type === 'image/jpg') bytes=jpegClean(buffer);
