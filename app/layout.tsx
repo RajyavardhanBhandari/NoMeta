@@ -7,6 +7,7 @@ import './privacy-scanner.css';
 import './premium-ui.css';
 import './theme-visibility.css';
 import './scanner-state-fix.css';
+import './scanner-final.css';
 import { PageViewTracker } from '../components/analytics/PageViewTracker';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { Footer } from '../components/ui/Footer';
