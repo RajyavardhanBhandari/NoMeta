@@ -1,4 +1,4 @@
-# NoMeta — V1 Ownership & Ecosystem Pass
+# NoMeta - V1 Ownership & Ecosystem Pass
 
 NoMeta is a privacy-first image metadata scanning and cleaning application. Core image processing is designed to run locally in the browser.
 
